@@ -54,6 +54,10 @@ python3 scripts/vault-graph.py --vault test=/tmp/vault --no-open --output /tmp/g
 - **Module layout:** public API lives in `lua/llm-kiwi/init.lua`; everything else is private behind `require("llm-kiwi.<submodule>")`.
 - **Python backend is frozen-ish.** The big embedded HTML/JS template is battle-tested; prefer small, well-scoped edits over rewrites.
 
+## Claude Code conventions
+
+`.claude/settings.json` ships a `PreToolUse` hook that fires on `git commit` via `.claude/hooks/check-claude-md.sh`. If any staged file sits under `lua/`, `plugin/`, `scripts/`, `.github/workflows/`, or is a root lint/test config (`stylua.toml`, `.luacheckrc`, `pyproject.toml`, `tests/minimal_init.lua`), the hook injects a non-blocking reminder asking Claude to re-audit this file before committing. If you see that reminder: check the Architecture / Commands / Project rules sections for drift and update them in the same commit if anything changed.
+
 ## Releases
 
 CHANGELOG-driven. Move `## [Unreleased]` items into a dated `## [X.Y.Z] - YYYY-MM-DD` section and merge to `main`; `.github/workflows/auto-release.yml` runs the full lint/compile/test gate, tags `vX.Y.Z`, and publishes a GitHub release using the CHANGELOG body. Pre-release suffixes (e.g. `0.2.0-rc.1`) are detected automatically. Manual tag pushes go through `release.yml` as a fallback.
