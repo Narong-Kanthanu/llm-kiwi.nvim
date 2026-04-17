@@ -1,0 +1,65 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+env:
+  STYLUA_VERSION: v2.4.1
+  LUACHECK_VERSION: 1.2.0
+  RUFF_VERSION: "0.6.9"
+
+jobs:
+  checks:
+    name: Pre-release checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Stylua check
+        uses: JohnnyMorganz/stylua-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: ${{ env.STYLUA_VERSION }}
+          args: --check lua/ plugin/ tests/
+
+      - name: Install luacheck
+        run: |
+          sudo apt-get update && sudo apt-get install -y luarocks
+          sudo luarocks install luacheck ${{ env.LUACHECK_VERSION }}
+
+      - name: Luacheck
+        run: luacheck lua/ plugin/ tests/
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ruff
+        run: pip install "ruff==${{ env.RUFF_VERSION }}"
+
+      - name: Ruff check
+        run: ruff check scripts/
+
+      - name: Compile check
+        run: python -W error::SyntaxWarning -m py_compile scripts/vault-graph.py
+
+  release:
+    name: Publish GitHub release
+    needs: checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}

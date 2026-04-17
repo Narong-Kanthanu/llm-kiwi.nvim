@@ -1,0 +1,86 @@
+name: Bug report
+description: Something isn't working as expected
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report. Please fill in as
+        much of the form below as you can — it helps us reproduce and fix
+        issues faster.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Preflight checks
+      options:
+        - label: I have searched existing issues and this is not a duplicate.
+          required: true
+        - label: I ran `:checkhealth llm-kiwi` and pasted the output below.
+          required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what actually happened?
+      placeholder: Steps, expected behavior, actual behavior.
+    validations:
+      required: true
+
+  - type: input
+    id: nvim-version
+    attributes:
+      label: Neovim version
+      description: Output of `nvim --version` (first line is enough).
+      placeholder: "NVIM v0.10.2"
+    validations:
+      required: true
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version
+      description: Output of `python3 --version`.
+      placeholder: "Python 3.11.9"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "macOS 14.5 / Ubuntu 22.04 / Windows 11 + WSL2"
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser (if graph rendering is affected)
+      placeholder: "Firefox 129 / Chrome 128 / Safari 17"
+
+  - type: textarea
+    id: checkhealth
+    attributes:
+      label: ":checkhealth llm-kiwi output"
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Your llm-kiwi config
+      description: Your `require('llm-kiwi').setup({...})` call, with vault paths redacted if needed.
+      render: lua
+    validations:
+      required: true
+
+  - type: textarea
+    id: messages
+    attributes:
+      label: ":messages / error output"
+      description: Anything from `:messages` or your terminal.
+      render: text

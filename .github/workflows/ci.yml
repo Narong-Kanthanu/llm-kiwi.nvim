@@ -1,0 +1,103 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  STYLUA_VERSION: v2.4.1
+  LUACHECK_VERSION: 1.2.0
+  RUFF_VERSION: "0.6.9"
+
+jobs:
+  lua:
+    name: Lua lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Stylua check
+        uses: JohnnyMorganz/stylua-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: ${{ env.STYLUA_VERSION }}
+          args: --check lua/ plugin/ tests/
+
+      - name: Install luacheck
+        run: |
+          sudo apt-get update && sudo apt-get install -y luarocks
+          sudo luarocks install luacheck ${{ env.LUACHECK_VERSION }}
+
+      - name: Luacheck
+        run: luacheck lua/ plugin/ tests/
+
+  python:
+    name: Python lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ruff
+        run: pip install "ruff==${{ env.RUFF_VERSION }}"
+
+      - name: Ruff check
+        run: ruff check scripts/
+
+      - name: Compile check
+        run: python -W error::SyntaxWarning -m py_compile scripts/vault-graph.py
+
+  lua-tests:
+    name: Lua tests (nvim ${{ matrix.nvim-version }})
+    strategy:
+      fail-fast: false
+      matrix:
+        nvim-version: [stable, nightly]
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.nvim-version == 'nightly' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Neovim
+        uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: ${{ matrix.nvim-version }}
+
+      - name: Clone plenary.nvim
+        run: git clone --depth 1 https://github.com/nvim-lua/plenary.nvim deps/plenary.nvim
+
+      - name: Run plenary tests
+        run: |
+          nvim --headless --noplugin -u tests/minimal_init.lua \
+            -c "PlenaryBustedDirectory tests/ { minimal_init = 'tests/minimal_init.lua' }"
+
+  smoke:
+    name: Smoke test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generate graph from fixture vault
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/vault"
+          printf '# A\nSee [[b]] and [[ghost]].\n' > "$RUNNER_TEMP/vault/a.md"
+          printf '# B\nLinks to [[a]] and [[c]].\n' > "$RUNNER_TEMP/vault/b.md"
+          printf '# C\n' > "$RUNNER_TEMP/vault/c.md"
+          python scripts/vault-graph.py --vault test="$RUNNER_TEMP/vault" --no-open --output "$RUNNER_TEMP/graph.html"
+          grep -q 'LLM Kiwi' "$RUNNER_TEMP/graph.html"
+          grep -q '"test"' "$RUNNER_TEMP/graph.html"

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
+  "runtime.version": "LuaJIT",
+  "workspace.library": [
+    "$VIMRUNTIME/lua",
+    "${3rd}/luv/library"
+  ],
+  "workspace.checkThirdParty": false,
+  "diagnostics.globals": [
+    "vim",
+    "describe",
+    "it",
+    "before_each",
+    "after_each",
+    "pending"
+  ],
+  "diagnostics.disable": [
+    "missing-fields"
+  ]
+}

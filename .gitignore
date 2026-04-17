@@ -1,0 +1,27 @@
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+graph.html
+/tmp/
+
+# Lua / LuaRocks
+.luarocks/
+.rocks/
+lua_modules/
+
+# Plenary test dependencies (cloned locally by CI and for local test runs)
+/deps/
+
+# Editor & OS cruft
+*.swp
+*.swo
+*~
+tags
+Session.vim
+.vim/
+
+# Coverage / luacov
+coverage/
+luacov.report.out
+luacov.stats.out

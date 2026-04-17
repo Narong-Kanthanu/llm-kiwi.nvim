@@ -1,0 +1,108 @@
+*llm-kiwi.txt*  Knowledge-graph viewer for markdown vaults
+
+                                                                    *llm-kiwi*
+llm-kiwi.nvim scans [[wikilinks]] across one or more markdown vaults and
+renders an interactive force-directed graph in your browser. Clicking or
+keyboard-navigating a node opens the corresponding `.md` file in the running
+Neovim instance.
+
+Inspired by Andrej Karpathy's llm-wiki concept:
+    https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f
+
+==============================================================================
+CONTENTS                                                   *llm-kiwi-contents*
+
+    1. Requirements ........................ |llm-kiwi-requirements|
+    2. Setup ............................... |llm-kiwi-setup|
+    3. Commands ............................ |llm-kiwi-commands|
+    4. Configuration ....................... |llm-kiwi-configuration|
+    5. Graph keymap ........................ |llm-kiwi-graph-keys|
+    6. Health .............................. |llm-kiwi-health|
+
+==============================================================================
+1. REQUIREMENTS                                        *llm-kiwi-requirements*
+
+- Neovim 0.9+
+- Python 3.10+ on PATH
+- A browser. macOS uses AppleScript to refresh existing tabs; other platforms
+  open a new tab each time.
+
+==============================================================================
+2. SETUP                                                      *llm-kiwi-setup*
+
+With lazy.nvim: >lua
+    {
+      "Narong-Kanthanu/llm-kiwi.nvim",
+      cmd = { "LlmKiwiOpen", "LlmKiwiClose", "LlmKiwiList" },
+      opts = {
+        workspaces = {
+          { name = "personal", path = "~/notes" },
+          { name = "llm-wiki", path = "~/llm-wiki" },
+        },
+      },
+    }
+<
+
+No default keymaps are registered.
+
+==============================================================================
+3. COMMANDS                                                *llm-kiwi-commands*
+
+                                                                *:LlmKiwiOpen*
+:LlmKiwiOpen [workspace]
+    Open the graph. If [workspace] matches a configured name, it becomes the
+    initially active vault; otherwise the first workspace is used.
+
+                                                               *:LlmKiwiClose*
+:LlmKiwiClose
+    Request the running graph server to shut down. Closing the browser tab
+    also triggers shutdown via `navigator.sendBeacon`.
+
+                                                                *:LlmKiwiList*
+:LlmKiwiList
+    Echo the configured workspaces.
+
+==============================================================================
+4. CONFIGURATION                                      *llm-kiwi-configuration*
+
+Pass an `opts` table to `setup()` or use lazy.nvim `opts`:
+
+    workspaces        List of { name, path } entries. Required.
+    python            Python executable. Default: "python3".
+    script            Path to `vault-graph.py`. Auto-resolved if nil.
+    port              HTTP server port. Default: 18765.
+    open_browser      Set to false to skip opening a browser window.
+    output            If set, write static HTML to this path instead of
+                      starting a server.
+    nvim_server       If true, pass `v:servername` so the graph can open
+                      files back in this Neovim.
+
+==============================================================================
+5. GRAPH KEYMAP                                         *llm-kiwi-graph-keys*
+
+Inside the rendered graph page:
+
+    h j k l         Navigate to the nearest node in that direction
+    Enter           Enter focus mode on the selected node
+    o               Open the selected node's file in Neovim
+    f               Focus the search box
+    w               Open the workspace selector (j/k to pick, Enter)
+    Esc             Step back (focus → selection → search → reset view)
+
+Mouse:
+    drag            Pan
+    scroll          Zoom
+    hover           Highlight connected subgraph
+    click (dot)     Enter focus mode
+    click (label)   Open file in Neovim
+    double-click    Open file in Neovim
+
+==============================================================================
+6. HEALTH                                                    *llm-kiwi-health*
+
+                                                       *:checkhealth-llm-kiwi*
+:checkhealth llm-kiwi
+    Verify that python3 is on PATH, `vault-graph.py` is readable, and every
+    configured workspace path exists.
+
+ vim:tw=78:ts=8:ft=help:norl:
