@@ -8,6 +8,14 @@ local defaults = {
   open_browser = true,
   output = nil,
   nvim_server = true,
+  chromium_apps = {
+    "Google Chrome",
+    "Google Chrome Canary",
+    "Brave Browser",
+    "Microsoft Edge",
+    "Vivaldi",
+    "Chromium",
+  },
 }
 
 local function plugin_root()

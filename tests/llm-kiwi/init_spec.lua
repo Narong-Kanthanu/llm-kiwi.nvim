@@ -40,6 +40,26 @@ describe("llm-kiwi", function()
     assert.is_not_nil(commands.LlmKiwiList)
   end)
 
+  it("ships default chromium_apps including Brave Browser", function()
+    require("llm-kiwi").setup({})
+    local cfg = require("llm-kiwi.config").get()
+    assert.is_table(cfg.chromium_apps)
+    local found = {}
+    for _, app in ipairs(cfg.chromium_apps) do
+      found[app] = true
+    end
+    assert.is_true(found["Google Chrome"])
+    assert.is_true(found["Brave Browser"])
+    assert.is_true(found["Microsoft Edge"])
+  end)
+
+  it("allows chromium_apps to be overridden via setup", function()
+    require("llm-kiwi").setup({ chromium_apps = { "Arc" } })
+    local cfg = require("llm-kiwi.config").get()
+    assert.equals(1, #cfg.chromium_apps)
+    assert.equals("Arc", cfg.chromium_apps[1])
+  end)
+
   it("warns when listing with no workspaces configured", function()
     require("llm-kiwi").setup({ workspaces = {} })
     local captured = nil

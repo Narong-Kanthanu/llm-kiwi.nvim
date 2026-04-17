@@ -47,6 +47,16 @@ def _parse_vault(s: str) -> tuple[str, Path]:
     return name, path
 
 
+DEFAULT_CHROMIUM_APPS = [
+    "Google Chrome",
+    "Google Chrome Canary",
+    "Brave Browser",
+    "Microsoft Edge",
+    "Vivaldi",
+    "Chromium",
+]
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Generate LLM Kiwi knowledge graph")
     parser.add_argument("--vault", dest="vaults", action="append", default=[],
@@ -58,7 +68,13 @@ def parse_args():
     parser.add_argument("--output", help="Output HTML file path (default: common root of vaults)")
     parser.add_argument("--no-open", action="store_true", help="Don't open browser")
     parser.add_argument("--nvim-server", help="Neovim server address (enables HTTP server with open-in-nvim)")
-    return parser.parse_args()
+    parser.add_argument("--chromium-app", dest="chromium_apps", action="append",
+                        default=None,
+                        help="macOS Chromium app name to try for open/refresh (repeatable)")
+    args = parser.parse_args()
+    if not args.chromium_apps:
+        args.chromium_apps = list(DEFAULT_CHROMIUM_APPS)
+    return args
 
 
 # ── Scan vault ────────────────────────────────────────────────────────────────
@@ -1080,14 +1096,16 @@ def generate_html(workspaces_data: dict, active: str) -> str:
 
 # ── Browser open / refresh ────────────────────────────────────────────────────
 
-def open_or_refresh(url: str):
+def open_or_refresh(url: str, chromium_apps=None):
     """Refresh existing browser tab if open, otherwise open a new one."""
+    if chromium_apps is None:
+        chromium_apps = DEFAULT_CHROMIUM_APPS
+
     if sys.platform == "darwin":
-        # Try Chrome first, then Safari, via AppleScript
-        for browser, script in [
-            ("Google Chrome", _chrome_applescript(url)),
-            ("Safari", _safari_applescript(url)),
-        ]:
+        # Try each configured Chromium-based browser, then Safari, via AppleScript.
+        candidates = [(app, _chromium_applescript(app, url)) for app in chromium_apps]
+        candidates.append(("Safari", _safari_applescript(url)))
+        for browser, script in candidates:
             try:
                 result = subprocess.run(
                     ["osascript", "-e", script],
@@ -1104,12 +1122,12 @@ def open_or_refresh(url: str):
     print("Opening in browser...")
 
 
-def _chrome_applescript(url: str) -> str:
+def _chromium_applescript(app: str, url: str) -> str:
     return f'''
 tell application "System Events"
-    if not (exists process "Google Chrome") then return "missing"
+    if not (exists process "{app}") then return "missing"
 end tell
-tell application "Google Chrome"
+tell application "{app}"
     repeat with w in windows
         set ti to 0
         repeat with t in tabs of w
@@ -1165,7 +1183,7 @@ def kill_previous_server():
 IDLE_TIMEOUT = 90  # seconds — auto-stop if no heartbeat
 
 
-def start_server(html_content: str, nvim_server: str, no_open: bool):
+def start_server(html_content: str, nvim_server: str, no_open: bool, chromium_apps=None):
     """Start HTTP server that serves the graph and handles open-in-nvim requests."""
     kill_previous_server()
     PID_FILE.write_text(str(os.getpid()))
@@ -1254,7 +1272,7 @@ def start_server(html_content: str, nvim_server: str, no_open: bool):
     print(f'Serving graph at {url}')
 
     if not no_open:
-        open_or_refresh(url)
+        open_or_refresh(url, chromium_apps)
 
     def handle_sigterm(signum, frame):
         nonlocal running
@@ -1322,7 +1340,7 @@ def main():
 
     # Server mode: serve via HTTP with open-in-nvim API
     if args.nvim_server:
-        return start_server(html, args.nvim_server, args.no_open)
+        return start_server(html, args.nvim_server, args.no_open, args.chromium_apps)
 
     # File mode: write HTML and open in browser
     if args.output:
@@ -1337,7 +1355,7 @@ def main():
     print(f"Graph saved: {out_path}")
 
     if not args.no_open:
-        open_or_refresh(f"file://{out_path}")
+        open_or_refresh(f"file://{out_path}", args.chromium_apps)
 
     return 0
 

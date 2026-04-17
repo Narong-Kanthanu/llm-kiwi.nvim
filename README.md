@@ -41,8 +41,11 @@ works with any Obsidian-flavoured vault or plain `[[wikilink]]` notes.
 
 - Neovim 0.9+
 - Python 3.10+ on `PATH`
-- macOS for in-place browser tab refresh (AppleScript). On other platforms,
-  each invocation opens a new browser tab via `webbrowser.open`.
+- macOS for in-place browser tab refresh and close (AppleScript). Chrome,
+  Brave, Edge, Vivaldi, Chromium, and Safari are supported out of the box;
+  extend `chromium_apps` in `setup()` to add others (e.g. Arc, Opera). On
+  other platforms, each invocation opens a new browser tab via
+  `webbrowser.open`.
 
 ## Install
 
@@ -88,6 +91,14 @@ require("llm-kiwi").setup({
   open_browser = true,      -- set false to just generate HTML
   output = nil,             -- if set, write static HTML here instead of running server
   nvim_server = true,       -- pass vim.v.servername so clicks open in this nvim
+  chromium_apps = {         -- macOS Chromium apps to refresh/close via AppleScript
+    "Google Chrome",
+    "Google Chrome Canary",
+    "Brave Browser",
+    "Microsoft Edge",
+    "Vivaldi",
+    "Chromium",
+  },
 })
 ```
 

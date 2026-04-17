@@ -35,6 +35,13 @@ local function build_argv(cfg, active)
     table.insert(argv, vim.fn.expand(cfg.output))
   end
 
+  for _, app in ipairs(cfg.chromium_apps or {}) do
+    if type(app) == "string" and app ~= "" then
+      table.insert(argv, "--chromium-app")
+      table.insert(argv, app)
+    end
+  end
+
   return argv
 end
 
@@ -60,13 +67,13 @@ function M.start(active)
   vim.fn.jobstart(argv, { detach = true })
 end
 
-local function chrome_close_script(url)
+local function chromium_close_script(app, url)
   return string.format(
     [[
 tell application "System Events"
-    if not (exists process "Google Chrome") then return "missing"
+    if not (exists process "%s") then return "missing"
 end tell
-tell application "Google Chrome"
+tell application "%s"
     repeat with w in windows
         repeat with t in tabs of w
             if URL of t starts with "%s" then
@@ -78,6 +85,8 @@ tell application "Google Chrome"
 end tell
 return "notfound"
 ]],
+    app,
+    app,
     url
   )
 end
@@ -109,7 +118,11 @@ function M.stop()
   local base = "http://127.0.0.1:" .. cfg.port
 
   if vim.fn.has("mac") == 1 and vim.fn.executable("osascript") == 1 then
-    vim.fn.jobstart({ "osascript", "-e", chrome_close_script(base) }, { detach = true })
+    for _, app in ipairs(cfg.chromium_apps or {}) do
+      if type(app) == "string" and app ~= "" then
+        vim.fn.jobstart({ "osascript", "-e", chromium_close_script(app, base) }, { detach = true })
+      end
+    end
     vim.fn.jobstart({ "osascript", "-e", safari_close_script(base) }, { detach = true })
   end
 
