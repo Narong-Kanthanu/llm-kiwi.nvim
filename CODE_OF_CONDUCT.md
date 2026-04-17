@@ -22,10 +22,16 @@ the community in public spaces.
 
 ## Reporting
 
-Instances of unacceptable behavior may be reported to the project maintainer
-at **narong@flowaccount.com**. All complaints will be reviewed and
-investigated promptly and fairly. The maintainer is obligated to respect the
-privacy and security of the reporter of any incident.
+Instances of unacceptable behavior may be reported to the project
+maintainer ([@Narong-Kanthanu](https://github.com/Narong-Kanthanu))
+through GitHub's [private vulnerability reporting][advisory] on this
+repository. The form supports any confidential report — not just
+security issues — and gives you a private thread with the maintainer.
+All complaints will be reviewed and investigated promptly and fairly.
+The maintainer is obligated to respect the privacy and security of the
+reporter of any incident.
+
+[advisory]: https://github.com/Narong-Kanthanu/llm-kiwi.nvim/security/advisories/new
 
 ## Enforcement
 

@@ -15,11 +15,16 @@ model. Security fixes land on `main` and in the latest tagged release.
 
 **Please do not file a public GitHub issue for security bugs.**
 
-Report security issues privately via one of:
+Report security issues privately using GitHub's private vulnerability
+reporting on this repo:
 
-- Email: **narong@flowaccount.com** (preferred)
-- GitHub private vulnerability reporting:
-  <https://github.com/Narong-Kanthanu/llm-kiwi.nvim/security/advisories/new>
+<https://github.com/Narong-Kanthanu/llm-kiwi.nvim/security/advisories/new>
+
+This creates a confidential channel between you and the maintainer
+([@Narong-Kanthanu](https://github.com/Narong-Kanthanu)). If you can't
+access that form, open a minimal public issue titled "security contact
+needed" — **do not include any vulnerability details** — and the
+maintainer will reach out to arrange a private channel.
 
 Please include:
 
