@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `:checkhealth llm-kiwi` verifying python, script path, and vault paths.
 - Vimdoc help at `:help llm-kiwi`.
 - Project banner (`docs/banner.svg`) displayed at the top of the README.
+- Demo GIF (`docs/demo.gif`) in the README showing graph navigation and
+  open-in-nvim click-through.
 - Community files: `CODE_OF_CONDUCT.md`, `SECURITY.md`, `CONTRIBUTING.md`.
 - Plenary smoke tests and cross-platform CI (Ubuntu + macOS).
 - Neovim version matrix in CI: stable + nightly (nightly non-blocking).

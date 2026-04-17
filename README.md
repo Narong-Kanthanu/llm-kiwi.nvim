@@ -16,9 +16,9 @@ across one or more markdown vaults and opens a force-directed graph in your
 browser. Click (or `hjkl`-navigate) a node to jump straight into that `.md`
 file inside the running Neovim instance.
 
-<!-- Demo: add a GIF or screenshot at docs/demo.png and uncomment -->
-<!-- ![llm-kiwi.nvim demo](./docs/demo.png) -->
-
+<p align="center">
+  <img src="./docs/demo.gif" alt="llm-kiwi.nvim demo — graph on the left, markdown note on the right" width="900">
+</p>
 
 Built for browsing **AI-generated wikis** in the style of Andrej Karpathy's
 [llm-wiki concept](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)
