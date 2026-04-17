@@ -1,72 +1,51 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300" role="img" aria-label="llm-kiwi.nvim — knowledge graphs for your markdown vaults">
   <title>llm-kiwi.nvim</title>
-  <desc>A stylized kiwifruit cross-section paired with the llm-kiwi.nvim wordmark.</desc>
-
-  <defs>
-    <radialGradient id="flesh" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#e3f0a3"/>
-      <stop offset="55%" stop-color="#a8c650"/>
-      <stop offset="100%" stop-color="#6d8f2e"/>
-    </radialGradient>
-    <radialGradient id="core" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#fdfadf"/>
-      <stop offset="100%" stop-color="#d8d0a0"/>
-    </radialGradient>
-    <radialGradient id="skin" cx="50%" cy="50%" r="50%">
-      <stop offset="85%" stop-color="#8a6432"/>
-      <stop offset="100%" stop-color="#4a2e12"/>
-    </radialGradient>
-  </defs>
+  <desc>A flat kiwifruit cross-section paired with the llm-kiwi.nvim wordmark.</desc>
 
   <!-- Dark background matching the plugin's graph theme -->
   <rect width="1200" height="300" fill="#1a2332"/>
 
-  <!-- Kiwi cross-section -->
+  <!-- Kiwi cross-section: flat design, concentric rings -->
   <g transform="translate(170, 150)">
-    <!-- Subtle green glow -->
-    <circle r="115" fill="#57A143" opacity="0.08"/>
-    <!-- Skin -->
-    <circle r="108" fill="url(#skin)"/>
-    <!-- Inner skin highlight -->
-    <circle r="99" fill="#9d7445"/>
+    <!-- Brown skin -->
+    <circle r="108" fill="#6b3e1e"/>
+    <!-- Bright yellow inner rim -->
+    <circle r="94" fill="#f0dd3a"/>
     <!-- Green flesh -->
-    <circle r="94" fill="url(#flesh)"/>
-    <!-- Creamy radial rays from center -->
-    <g stroke="#f4f0d8" stroke-width="2.5" opacity="0.32" fill="none" stroke-linecap="round">
-      <line x1="0" y1="-14" x2="0" y2="-86"/>
-      <line x1="0" y1="14" x2="0" y2="86"/>
-      <line x1="-14" y1="0" x2="-86" y2="0"/>
-      <line x1="14" y1="0" x2="86" y2="0"/>
-      <line x1="-10" y1="-10" x2="-62" y2="-62"/>
-      <line x1="10" y1="-10" x2="62" y2="-62"/>
-      <line x1="-10" y1="10" x2="-62" y2="62"/>
-      <line x1="10" y1="10" x2="62" y2="62"/>
+    <circle r="88" fill="#9fc834"/>
+    <!-- Pale-green radial rays from the center outward (12 rays, 30° apart) -->
+    <g stroke="#d4e873" stroke-width="4.5" stroke-linecap="round" fill="none">
+      <line x1="0"     y1="-32"   x2="0"     y2="-78"/>
+      <line x1="16"    y1="-27.7" x2="39"    y2="-67.5"/>
+      <line x1="27.7"  y1="-16"   x2="67.5"  y2="-39"/>
+      <line x1="32"    y1="0"     x2="78"    y2="0"/>
+      <line x1="27.7"  y1="16"    x2="67.5"  y2="39"/>
+      <line x1="16"    y1="27.7"  x2="39"    y2="67.5"/>
+      <line x1="0"     y1="32"    x2="0"     y2="78"/>
+      <line x1="-16"   y1="27.7"  x2="-39"   y2="67.5"/>
+      <line x1="-27.7" y1="16"    x2="-67.5" y2="39"/>
+      <line x1="-32"   y1="0"     x2="-78"   y2="0"/>
+      <line x1="-27.7" y1="-16"   x2="-67.5" y2="-39"/>
+      <line x1="-16"   y1="-27.7" x2="-39"   y2="-67.5"/>
     </g>
-    <!-- Creamy center -->
-    <circle r="17" fill="url(#core)"/>
-    <circle r="17" fill="none" stroke="#bfb888" stroke-width="0.8" opacity="0.6"/>
-    <!-- Seed ring: 14 seeds at radius ~52, rotated to point radially outward -->
-    <g fill="#15100a">
-      <ellipse cx="0"   cy="-52" rx="3.6" ry="5.4"/>
-      <ellipse cx="23"  cy="-47" rx="3.6" ry="5.4" transform="rotate(26 23 -47)"/>
-      <ellipse cx="41"  cy="-32" rx="3.6" ry="5.4" transform="rotate(51 41 -32)"/>
-      <ellipse cx="51"  cy="-11" rx="3.6" ry="5.4" transform="rotate(77 51 -11)"/>
-      <ellipse cx="51"  cy="11"  rx="3.6" ry="5.4" transform="rotate(103 51 11)"/>
-      <ellipse cx="41"  cy="32"  rx="3.6" ry="5.4" transform="rotate(129 41 32)"/>
-      <ellipse cx="23"  cy="47"  rx="3.6" ry="5.4" transform="rotate(154 23 47)"/>
-      <ellipse cx="0"   cy="52"  rx="3.6" ry="5.4" transform="rotate(180 0 52)"/>
-      <ellipse cx="-23" cy="47"  rx="3.6" ry="5.4" transform="rotate(206 -23 47)"/>
-      <ellipse cx="-41" cy="32"  rx="3.6" ry="5.4" transform="rotate(231 -41 32)"/>
-      <ellipse cx="-51" cy="11"  rx="3.6" ry="5.4" transform="rotate(257 -51 11)"/>
-      <ellipse cx="-51" cy="-11" rx="3.6" ry="5.4" transform="rotate(283 -51 -11)"/>
-      <ellipse cx="-41" cy="-32" rx="3.6" ry="5.4" transform="rotate(309 -41 -32)"/>
-      <ellipse cx="-23" cy="-47" rx="3.6" ry="5.4" transform="rotate(334 -23 -47)"/>
-    </g>
-    <!-- Small leaf sprig at top-right, nodding to the "fruit" origin -->
-    <g transform="translate(82, -80) rotate(28)">
-      <path d="M 0 0 Q 12 -18 4 -36 Q -6 -18 0 0 Z" fill="#5fa03a"/>
-      <path d="M 0 0 Q 12 -18 4 -36" fill="none" stroke="#3d7020" stroke-width="1.2" opacity="0.7"/>
-      <line x1="0" y1="0" x2="2" y2="-30" stroke="#3d7020" stroke-width="1.4" stroke-linecap="round"/>
+    <!-- Pale-green center -->
+    <circle r="30" fill="#d4e873"/>
+    <!-- Seed ring: 14 navy seeds at r=55, rotated to point radially outward -->
+    <g fill="#141b3d">
+      <ellipse cx="0"     cy="-55"   rx="4" ry="7"/>
+      <ellipse cx="23.9"  cy="-49.5" rx="4" ry="7" transform="rotate(25.7 23.9 -49.5)"/>
+      <ellipse cx="43"    cy="-34.3" rx="4" ry="7" transform="rotate(51.4 43 -34.3)"/>
+      <ellipse cx="53.6"  cy="-12.3" rx="4" ry="7" transform="rotate(77.1 53.6 -12.3)"/>
+      <ellipse cx="53.6"  cy="12.3"  rx="4" ry="7" transform="rotate(102.9 53.6 12.3)"/>
+      <ellipse cx="43"    cy="34.3"  rx="4" ry="7" transform="rotate(128.6 43 34.3)"/>
+      <ellipse cx="23.9"  cy="49.5"  rx="4" ry="7" transform="rotate(154.3 23.9 49.5)"/>
+      <ellipse cx="0"     cy="55"    rx="4" ry="7" transform="rotate(180 0 55)"/>
+      <ellipse cx="-23.9" cy="49.5"  rx="4" ry="7" transform="rotate(205.7 -23.9 49.5)"/>
+      <ellipse cx="-43"   cy="34.3"  rx="4" ry="7" transform="rotate(231.4 -43 34.3)"/>
+      <ellipse cx="-53.6" cy="12.3"  rx="4" ry="7" transform="rotate(257.1 -53.6 12.3)"/>
+      <ellipse cx="-53.6" cy="-12.3" rx="4" ry="7" transform="rotate(282.9 -53.6 -12.3)"/>
+      <ellipse cx="-43"   cy="-34.3" rx="4" ry="7" transform="rotate(308.6 -43 -34.3)"/>
+      <ellipse cx="-23.9" cy="-49.5" rx="4" ry="7" transform="rotate(334.3 -23.9 -49.5)"/>
     </g>
   </g>
 
