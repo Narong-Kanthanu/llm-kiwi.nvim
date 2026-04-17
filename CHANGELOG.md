@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-04-17
+
+Initial public release.
+
 ### Added
 
 - Force-directed graph of markdown notes and `[[wikilink]]` edges rendered
@@ -29,4 +33,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pinned lint tool versions (stylua, luacheck, ruff) for reproducible CI.
 - Tag-triggered GitHub release workflow.
 
-[Unreleased]: https://github.com/Narong-Kanthanu/llm-kiwi.nvim/compare/HEAD...HEAD
+[Unreleased]: https://github.com/Narong-Kanthanu/llm-kiwi.nvim/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/Narong-Kanthanu/llm-kiwi.nvim/releases/tag/v0.1.0
