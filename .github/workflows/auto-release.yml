@@ -1,0 +1,173 @@
+name: Auto-release from CHANGELOG
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - CHANGELOG.md
+
+permissions:
+  contents: write
+
+env:
+  STYLUA_VERSION: v2.4.1
+  LUACHECK_VERSION: 1.2.0
+  RUFF_VERSION: "0.6.9"
+
+jobs:
+  detect-version:
+    name: Detect new version in CHANGELOG
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.parse.outputs.should_release }}
+      version: ${{ steps.parse.outputs.version }}
+      tag: ${{ steps.parse.outputs.tag }}
+      notes: ${{ steps.parse.outputs.notes }}
+      is_prerelease: ${{ steps.parse.outputs.is_prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Parse topmost dated version from CHANGELOG
+        id: parse
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Topmost dated version heading, matching "## [X.Y.Z] - YYYY-MM-DD"
+          # or "## [X.Y.Z-pre.1] - YYYY-MM-DD" (pre-release suffix allowed).
+          HEADING=$(grep -oE '^## \[[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?\] - [0-9]{4}-[0-9]{2}-[0-9]{2}' CHANGELOG.md | head -1 || true)
+
+          if [ -z "$HEADING" ]; then
+            echo "No dated version heading found — skipping."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          VERSION=$(echo "$HEADING" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?' | head -1)
+          TAG="v$VERSION"
+
+          if git rev-parse "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists — nothing to do."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Extract notes body: everything between the version heading and the
+          # next "## [" heading or the first link-reference definition ("[x]: http…").
+          # Trim leading and trailing blank lines.
+          NOTES=$(awk -v v="$VERSION" '
+            $0 ~ "^## \\[" v "\\]" { capture=1; next }
+            capture && (/^## \[/ || /^\[[^]]+\]: /) { exit }
+            capture { buf = buf $0 "\n" }
+            END {
+              sub(/^\n+/, "", buf)
+              sub(/\n+$/, "", buf)
+              printf "%s", buf
+            }
+          ' CHANGELOG.md)
+
+          # Fallback if the body is empty (rare — would mean an empty version block)
+          if [ -z "$NOTES" ]; then
+            NOTES="Release $TAG"
+          fi
+
+          IS_PRERELEASE=false
+          case "$VERSION" in
+            *-*) IS_PRERELEASE=true ;;
+          esac
+
+          echo "Detected new release: $TAG (prerelease=$IS_PRERELEASE)"
+
+          {
+            echo "should_release=true"
+            echo "version=$VERSION"
+            echo "tag=$TAG"
+            echo "is_prerelease=$IS_PRERELEASE"
+            echo "notes<<__END_OF_NOTES__"
+            echo "$NOTES"
+            echo "__END_OF_NOTES__"
+          } >> "$GITHUB_OUTPUT"
+
+  checks:
+    name: Pre-release checks
+    needs: detect-version
+    if: needs.detect-version.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Stylua check
+        uses: JohnnyMorganz/stylua-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: ${{ env.STYLUA_VERSION }}
+          args: --check lua/ plugin/ tests/
+
+      - name: Install luacheck
+        run: |
+          sudo apt-get update && sudo apt-get install -y luarocks
+          sudo luarocks install luacheck ${{ env.LUACHECK_VERSION }}
+
+      - name: Luacheck
+        run: luacheck lua/ plugin/ tests/
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ruff
+        run: pip install "ruff==${{ env.RUFF_VERSION }}"
+
+      - name: Ruff check
+        run: ruff check scripts/
+
+      - name: Compile check
+        run: python -W error::SyntaxWarning -m py_compile scripts/vault-graph.py
+
+      - name: Install Neovim
+        uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: stable
+
+      - name: Clone plenary.nvim
+        run: git clone --depth 1 https://github.com/nvim-lua/plenary.nvim deps/plenary.nvim
+
+      - name: Run plenary tests
+        run: |
+          nvim --headless --noplugin -u tests/minimal_init.lua \
+            -c "PlenaryBustedDirectory tests/ { minimal_init = 'tests/minimal_init.lua' }"
+
+  release:
+    name: Tag and publish release
+    needs: [detect-version, checks]
+    if: needs.detect-version.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git identity
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create and push annotated tag
+        env:
+          TAG: ${{ needs.detect-version.outputs.tag }}
+        run: |
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.detect-version.outputs.tag }}
+          name: ${{ needs.detect-version.outputs.tag }}
+          body: ${{ needs.detect-version.outputs.notes }}
+          draft: false
+          prerelease: ${{ needs.detect-version.outputs.is_prerelease == 'true' }}

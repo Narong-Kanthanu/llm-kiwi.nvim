@@ -69,20 +69,46 @@ Tests live under `tests/` and follow the `*_spec.lua` convention.
 
 ## Cutting a release
 
-1. Move the `## [Unreleased]` bullets in [`CHANGELOG.md`](./CHANGELOG.md) into
-   a new dated section: `## [vX.Y.Z] - YYYY-MM-DD`.
-2. Commit the changelog update.
-3. Tag and push:
+Releases are driven by [`CHANGELOG.md`](./CHANGELOG.md). To cut
+`vX.Y.Z`:
 
-   ```sh
-   git tag vX.Y.Z
-   git push origin vX.Y.Z
+1. Move the `## [Unreleased]` entries into a new dated section at the
+   top of the release list:
+
+   ```markdown
+   ## [X.Y.Z] - YYYY-MM-DD
+
+   ### Added
+   - …
    ```
 
-The `.github/workflows/release.yml` workflow will run the lint/compile
-checks and, on success, publish a GitHub release with auto-generated
-notes. No manual artifact upload is required — users install directly
-from the repo via lazy.nvim.
+   Update the link anchors at the bottom of the file as well.
+2. Open a PR with just that change and merge it to `main`.
+
+On merge, [`auto-release.yml`](./.github/workflows/auto-release.yml)
+takes over. It:
+
+- parses the topmost dated version from `CHANGELOG.md`,
+- runs the full lint/compile/plenary gate,
+- creates the annotated tag `vX.Y.Z`,
+- publishes a GitHub release using the CHANGELOG body as release notes.
+
+Pre-releases work automatically — use a suffix like `0.2.0-rc.1` in the
+heading and the workflow marks the GitHub release as a pre-release.
+
+### Manual fallback
+
+If you need to re-tag or cut a release without touching the CHANGELOG
+(emergency fix, repeat release), push a tag directly:
+
+```sh
+git tag -a vX.Y.Z -m "Release vX.Y.Z"
+git push origin vX.Y.Z
+```
+
+That path goes through [`release.yml`](./.github/workflows/release.yml)
+which runs the same lint/compile checks and publishes a release with
+GitHub's auto-generated notes.
 
 ## Scope & style
 

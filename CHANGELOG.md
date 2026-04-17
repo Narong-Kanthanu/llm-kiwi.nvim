@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- CHANGELOG-driven auto-release workflow
+  (`.github/workflows/auto-release.yml`): pushes to `main` that add a
+  new dated version block to `CHANGELOG.md` now automatically create
+  the git tag and publish a GitHub release using the CHANGELOG body as
+  release notes.
+
 ## [0.1.0] - 2026-04-17
 
 Initial public release.
