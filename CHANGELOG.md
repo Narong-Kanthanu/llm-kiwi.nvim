@@ -7,13 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-17
+
 ### Added
 
+- Close the matching browser tab on `:LlmKiwiClose` (macOS Chrome and
+  Safari via AppleScript). Teardown is now symmetric with `:LlmKiwiOpen`,
+  which already uses the same workflow; non-macOS behaviour is unchanged
+  (server shuts down, tab is left to the user).
 - CHANGELOG-driven auto-release workflow
   (`.github/workflows/auto-release.yml`): pushes to `main` that add a
-  new dated version block to `CHANGELOG.md` now automatically create
-  the git tag and publish a GitHub release using the CHANGELOG body as
+  new dated version block to `CHANGELOG.md` automatically create the
+  git tag and publish a GitHub release using the CHANGELOG body as
   release notes.
+
+### Removed
+
+- "Using with obsidian.nvim" section from the README — it just
+  duplicated the main install example (a workspace is only
+  `{ name, path }`, no integration layer exists).
 
 ## [0.1.0] - 2026-04-17
 
@@ -41,5 +53,6 @@ Initial public release.
 - Pinned lint tool versions (stylua, luacheck, ruff) for reproducible CI.
 - Tag-triggered GitHub release workflow.
 
-[Unreleased]: https://github.com/Narong-Kanthanu/llm-kiwi.nvim/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Narong-Kanthanu/llm-kiwi.nvim/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/Narong-Kanthanu/llm-kiwi.nvim/releases/tag/v0.2.0
 [0.1.0]: https://github.com/Narong-Kanthanu/llm-kiwi.nvim/releases/tag/v0.1.0

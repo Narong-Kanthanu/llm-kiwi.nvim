@@ -60,10 +60,54 @@ function M.start(active)
   vim.fn.jobstart(argv, { detach = true })
 end
 
+local function chrome_close_script(url)
+  return string.format([[
+tell application "System Events"
+    if not (exists process "Google Chrome") then return "missing"
+end tell
+tell application "Google Chrome"
+    repeat with w in windows
+        repeat with t in tabs of w
+            if URL of t starts with "%s" then
+                close t
+                return "closed"
+            end if
+        end repeat
+    end repeat
+end tell
+return "notfound"
+]], url)
+end
+
+local function safari_close_script(url)
+  return string.format([[
+tell application "System Events"
+    if not (exists process "Safari") then return "missing"
+end tell
+tell application "Safari"
+    repeat with w in windows
+        repeat with t in tabs of w
+            if URL of t starts with "%s" then
+                tell t to close
+                return "closed"
+            end if
+        end repeat
+    end repeat
+end tell
+return "notfound"
+]], url)
+end
+
 function M.stop()
   local cfg = config.get()
-  local url = "http://127.0.0.1:" .. cfg.port .. "/api/shutdown"
-  vim.fn.jobstart({ "curl", "-s", "-X", "POST", "--max-time", "2", url }, { detach = true })
+  local base = "http://127.0.0.1:" .. cfg.port
+
+  if vim.fn.has("mac") == 1 and vim.fn.executable("osascript") == 1 then
+    vim.fn.jobstart({ "osascript", "-e", chrome_close_script(base) }, { detach = true })
+    vim.fn.jobstart({ "osascript", "-e", safari_close_script(base) }, { detach = true })
+  end
+
+  vim.fn.jobstart({ "curl", "-s", "-X", "POST", "--max-time", "2", base .. "/api/shutdown" }, { detach = true })
 end
 
 return M

@@ -91,36 +91,6 @@ require("llm-kiwi").setup({
 })
 ```
 
-## Using with obsidian.nvim
-
-If you already configure vaults via
-[obsidian.nvim](https://github.com/obsidian-nvim/obsidian.nvim), reuse them:
-
-```lua
-{
-  "Narong-Kanthanu/llm-kiwi.nvim",
-  cmd = { "LlmKiwiOpen", "LlmKiwiClose", "LlmKiwiList" },
-  config = function()
-    require("llm-kiwi").setup({
-      workspaces = {
-        { name = "personal", path = os.getenv("PERSONAL_VAULT_PATH") },
-        { name = "work",     path = os.getenv("WORK_VAULT_PATH") },
-      },
-    })
-  end,
-  keys = {
-    {
-      "<leader>kg",
-      function()
-        local ws = Obsidian and Obsidian.workspace and Obsidian.workspace.name
-        require("llm-kiwi").open({ workspace = ws })
-      end,
-      desc = "LLM Kiwi: open graph",
-    },
-  },
-}
-```
-
 ## Credits
 
 - Graph concept inspired by Andrej Karpathy's
