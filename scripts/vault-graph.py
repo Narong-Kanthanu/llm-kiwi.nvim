@@ -16,19 +16,19 @@ Usage:
     python3 vault-graph.py --vault notes=~/notes --nvim-server /tmp/nvimXXX/0
 """
 
+import argparse
+import http.server
+import json
 import os
 import re
-import json
-import argparse
+import signal
 import subprocess
 import sys
-import signal
-import webbrowser
-import http.server
+import time
 import urllib.parse
-from pathlib import Path
+import webbrowser
 from collections import defaultdict
-
+from pathlib import Path
 
 SERVER_PORT = 18765
 PID_FILE = Path("/tmp/llm-kiwi-server.pid")
@@ -1156,7 +1156,7 @@ def kill_previous_server():
         try:
             old_pid = int(PID_FILE.read_text().strip())
             os.kill(old_pid, signal.SIGTERM)
-            import time; time.sleep(0.3)
+            time.sleep(0.3)
         except (ProcessLookupError, ValueError, PermissionError, OSError):
             pass
         PID_FILE.unlink(missing_ok=True)
