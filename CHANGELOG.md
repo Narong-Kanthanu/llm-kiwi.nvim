@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-04-17
+
+### Added
+
+- Expanded Chromium-family browser support for both the refresh-on-open
+  and close-on-`:LlmKiwiClose` paths: Brave Browser, Microsoft Edge,
+  Vivaldi, and Chromium now join Google Chrome (and Safari) on macOS.
+  The set is driven by the `chromium_apps` config option, which is the
+  single source of truth — extending it automatically covers both paths.
+
 ## [0.2.0] - 2026-04-17
 
 ### Added
@@ -54,6 +64,7 @@ Initial public release.
 - Pinned lint tool versions (stylua, luacheck, ruff) for reproducible CI.
 - Tag-triggered GitHub release workflow.
 
-[Unreleased]: https://github.com/Narong-Kanthanu/llm-kiwi.nvim/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/Narong-Kanthanu/llm-kiwi.nvim/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Narong-Kanthanu/llm-kiwi.nvim/releases/tag/v0.3.0
 [0.2.0]: https://github.com/Narong-Kanthanu/llm-kiwi.nvim/releases/tag/v0.2.0
 [0.1.0]: https://github.com/Narong-Kanthanu/llm-kiwi.nvim/releases/tag/v0.1.0
