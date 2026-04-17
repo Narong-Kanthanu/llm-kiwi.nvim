@@ -1,9 +1,15 @@
-# llm-kiwi.nvim
+<p align="center">
+  <img src="./docs/banner.svg" alt="llm-kiwi.nvim — knowledge graphs for your markdown vaults" width="720">
+</p>
 
-[![CI](https://github.com/Narong-Kanthanu/llm-kiwi.nvim/actions/workflows/ci.yml/badge.svg)](https://github.com/Narong-Kanthanu/llm-kiwi.nvim/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![Neovim](https://img.shields.io/badge/Neovim-0.9+-57A143?logo=neovim&logoColor=white)](https://neovim.io)
-[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](./CODE_OF_CONDUCT.md)
+<p align="center">
+  <a href="https://github.com/Narong-Kanthanu/llm-kiwi.nvim/actions/workflows/ci.yml"><img src="https://github.com/Narong-Kanthanu/llm-kiwi.nvim/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="https://neovim.io"><img src="https://img.shields.io/badge/Neovim-0.9+-57A143?logo=neovim&logoColor=white" alt="Neovim 0.9+"></a>
+  <a href="./CODE_OF_CONDUCT.md"><img src="https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg" alt="Contributor Covenant 2.1"></a>
+</p>
+
+# llm-kiwi.nvim
 
 An interactive knowledge-graph viewer for Neovim — scans `[[wikilinks]]`
 across one or more markdown vaults and opens a force-directed graph in your
