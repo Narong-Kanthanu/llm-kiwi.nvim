@@ -61,7 +61,8 @@ function M.start(active)
 end
 
 local function chrome_close_script(url)
-  return string.format([[
+  return string.format(
+    [[
 tell application "System Events"
     if not (exists process "Google Chrome") then return "missing"
 end tell
@@ -76,11 +77,14 @@ tell application "Google Chrome"
     end repeat
 end tell
 return "notfound"
-]], url)
+]],
+    url
+  )
 end
 
 local function safari_close_script(url)
-  return string.format([[
+  return string.format(
+    [[
 tell application "System Events"
     if not (exists process "Safari") then return "missing"
 end tell
@@ -95,7 +99,9 @@ tell application "Safari"
     end repeat
 end tell
 return "notfound"
-]], url)
+]],
+    url
+  )
 end
 
 function M.stop()
