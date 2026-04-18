@@ -213,7 +213,6 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     display: flex;
     flex-direction: column;
     gap: 8px;
-    border-right: 1px solid #3a5a6a22;
     min-height: 0;
   }
   #controls > select, #controls > input, #controls > button, #controls > #explorer {
@@ -260,7 +259,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     font-family: -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif;
     outline: none;
   }
-  #explorer-list:focus { box-shadow: inset 0 0 0 1px #79a8eb55; }
+  #explorer-list:focus { box-shadow: none; }
   #explorer-list::-webkit-scrollbar { width: 6px; }
   #explorer-list::-webkit-scrollbar-track { background: transparent; }
   #explorer-list::-webkit-scrollbar-thumb { background: #3a5a6a44; border-radius: 3px; }
