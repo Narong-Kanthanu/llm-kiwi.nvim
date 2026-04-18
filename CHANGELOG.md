@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Explorer↔graph selection is now bidirectionally synced. Previously
+  picking a file in the Explorer would highlight its graph node, but
+  the reverse wasn't true. Now `hjkl`-navigating the graph moves the
+  Explorer cursor to the matching file row (scrolling it into view)
+  and auto-expands any collapsed ancestor folders so the row is
+  actually visible. Unresolved `[[wikilink]]` nodes keep the Explorer's
+  prior highlight instead of clearing.
+
 ### Changed
 
 - Graph viewer layout split into two real columns: a fixed 232px sidebar
