@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# pre-push hook: mirror CI's lint/compile gates so format/lint drift is
+# rejected locally before it reaches GitHub Actions.
+#
+# Mirrors .github/workflows/ci.yml (lua + python jobs) argv verbatim.
+# Does NOT run plenary tests — CI remains the final arbiter there.
+#
+# Opt in per clone with:
+#   git config core.hooksPath .githooks
+#
+# Emergency bypass: `git push --no-verify` (git built-in).
+
+set -euo pipefail
+
+# Drain git's stdin (local-ref local-oid remote-ref remote-oid lines) —
+# we don't branch on it; the hook lints the working tree like CI does.
+cat > /dev/null
+
+red()  { printf '\033[31m%s\033[0m\n' "$*" >&2; }
+green() { printf '\033[32m%s\033[0m\n' "$*"; }
+
+require() {
+    local tool=$1
+    if ! command -v "$tool" >/dev/null 2>&1; then
+        red "pre-push: \`$tool\` not found on PATH."
+        red "         Install instructions: CONTRIBUTING.md → \"Running the checks locally\"."
+        red "         (Bypass with \`git push --no-verify\` only if you know what you're doing.)"
+        exit 1
+    fi
+}
+
+require stylua
+require luacheck
+require ruff
+require python3
+
+root=$(git rev-parse --show-toplevel)
+cd "$root"
+
+echo "pre-push: stylua --check lua/ plugin/ tests/"
+stylua --check lua/ plugin/ tests/
+
+echo "pre-push: luacheck lua/ plugin/ tests/"
+luacheck lua/ plugin/ tests/
+
+echo "pre-push: ruff check scripts/"
+ruff check scripts/
+
+echo "pre-push: py_compile scripts/vault-graph.py"
+python3 -W error::SyntaxWarning -m py_compile scripts/vault-graph.py
+
+green "pre-push: all lint/compile checks passed."

@@ -58,6 +58,8 @@ python3 scripts/vault-graph.py --vault test=/tmp/vault --no-open --output /tmp/g
 
 `.claude/settings.json` ships a `PreToolUse` hook that fires on `git commit` via `.claude/hooks/check-claude-md.sh`. If any staged file sits under `lua/`, `plugin/`, `scripts/`, `.github/workflows/`, or is a root lint/test config (`stylua.toml`, `.luacheckrc`, `pyproject.toml`, `tests/minimal_init.lua`), the hook injects a non-blocking reminder asking Claude to re-audit this file before committing. If you see that reminder: check the Architecture / Commands / Project rules sections for drift and update them in the same commit if anything changed.
 
+`.githooks/pre-push` is a separate, git-native hook that mirrors CI's lint/compile gates (stylua, luacheck, ruff, py_compile) and rejects the push if any fail. It's opt-in per clone (`git config core.hooksPath .githooks`) because git config isn't versioned. Contributor setup lives in CONTRIBUTING.md. If you edit CI's lint commands in `.github/workflows/ci.yml`, update `.githooks/pre-push` in the same commit so the two don't drift.
+
 ## Releases
 
 CHANGELOG-driven. Move `## [Unreleased]` items into a dated `## [X.Y.Z] - YYYY-MM-DD` section and merge to `main`; `.github/workflows/auto-release.yml` runs the full lint/compile/test gate, tags `vX.Y.Z`, and publishes a GitHub release using the CHANGELOG body. Pre-release suffixes (e.g. `0.2.0-rc.1`) are detected automatically. Manual tag pushes go through `release.yml` as a fallback.

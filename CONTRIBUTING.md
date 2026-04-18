@@ -49,6 +49,20 @@ brew install stylua luacheck    # or your package manager
 pip install ruff
 ```
 
+### Optional: install the pre-push hook
+
+`.githooks/pre-push` runs the lint/compile checks above and rejects the push
+if any fail — catching drift locally before CI does. Enable it once per clone:
+
+```sh
+git config core.hooksPath .githooks
+```
+
+The hook is opt-in because `git config` is not versioned. It mirrors CI's
+lint gates but uses whatever tool versions you have on `$PATH` — CI pins its
+own (see `.github/workflows/ci.yml`), so a very new stylua locally can still
+diverge. Bypass with `git push --no-verify` in emergencies.
+
 ## Running the unit tests
 
 The test suite uses [plenary.nvim](https://github.com/nvim-lua/plenary.nvim)
