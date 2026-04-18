@@ -616,7 +616,7 @@ function renderGraph(wsName) {
     if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' });
     const row = explorerVisible[i];
     if (point && row.type === 'file' && row.nodeId && typeof selectNode === 'function' && nodesDS) {
-      try { selectNode(row.nodeId); } catch (err) { /* graph not ready */ }
+      try { selectNode(row.nodeId, { pan: false }); } catch (err) { /* graph not ready */ }
     }
   }
 
@@ -652,6 +652,9 @@ function renderGraph(wsName) {
 
   function exitExplorer() {
     explorerList.blur();
+    // Match exit symmetry with focus/search: clear any highlight the tree left on the graph.
+    if (selectedNode) selectNode(null);
+    tip.style.opacity = 0;
   }
 
   renderExplorerList();
@@ -948,7 +951,8 @@ function renderGraph(wsName) {
   // ── Vim navigation (hjkl + Enter) ──────────────────────────────────
   const origSizes = new Map();
 
-  function selectNode(nodeId) {
+  function selectNode(nodeId, opts) {
+    const pan = !opts || opts.pan !== false;
     // Restore previous node
     if (selectedNode) {
       const origSize = origSizes.get(selectedNode);
@@ -987,9 +991,11 @@ function renderGraph(wsName) {
     tip.style.top = (legendRect.bottom + 8) + 'px';
     tip.style.opacity = 1;
 
-    // Smooth pan
-    const pos = network.getPositions([nodeId])[nodeId];
-    network.moveTo({ position: pos, scale: network.getScale(), animation: { duration: 400, easingFunction: 'easeInOutCubic' } });
+    // Smooth pan (skipped when called from the file-tree sidebar — avoids queued animations on every j/k).
+    if (pan) {
+      const pos = network.getPositions([nodeId])[nodeId];
+      network.moveTo({ position: pos, scale: network.getScale(), animation: { duration: 400, easingFunction: 'easeInOutCubic' } });
+    }
   }
 
   function navigateVim(direction) {

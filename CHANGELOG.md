@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Exiting the sidebar Explorer (Esc) now restores the graph to a clean
+  state — clears the red-bordered node highlight and hides the tooltip,
+  matching the exit symmetry of search and focus modes. Tree navigation
+  (`j`/`k`) also no longer triggers an animated graph pan on every
+  keystroke, removing the lag users saw when switching back to the graph
+  after scrolling the file tree.
+
 ## [0.4.0] - 2026-04-18
 
 ### Added
