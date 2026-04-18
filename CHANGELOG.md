@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Sidebar file Explorer in the graph UI. The left control strip now
+  includes a folder-tree view of the active vault that lives underneath
+  the workspace selector and search box, with the `Reset view` button
+  pinned at the bottom. Press `e` from the graph to jump into the tree,
+  `j`/`k` to move, `h`/`l` to collapse/expand folders, and `o` or Enter
+  to open a file in Neovim. Selecting a file row highlights the
+  corresponding node in the graph; switching workspace rebuilds the
+  tree.
+- `Cache-Control: no-store` header on the graph server so reloads after
+  an `:LlmKiwiClose` / `:LlmKiwiOpen` restart never serve stale HTML
+  from the browser cache.
+
+### Changed
+
+- Workspace selector is always visible, including for single-vault
+  setups (previously auto-hidden). Aligns with the Explorer's "always
+  on" sidebar layout.
+- Vim keymap hint at the bottom-right of the graph is now shown in
+  standalone (`file://`) mode too, not only when served over HTTP.
+- Explorer is built before vis.js initialization so the sidebar still
+  renders if the network canvas fails to come up.
+
 ## [0.3.0] - 2026-04-17
 
 ### Added

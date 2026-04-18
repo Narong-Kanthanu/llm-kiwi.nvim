@@ -209,10 +209,16 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     position: absolute;
     top: 16px;
     left: 16px;
+    bottom: 64px;
+    width: 200px;
     display: flex;
     flex-direction: column;
     gap: 8px;
     z-index: 5;
+  }
+  #controls > select, #controls > input, #controls > button, #controls > #explorer {
+    box-sizing: border-box;
+    width: 100%;
   }
   #workspace-select, #search-box {
     background: #152030;
@@ -227,6 +233,51 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   #workspace-select { cursor: pointer; }
   #workspace-select:focus, #search-box:focus { border-color: #79a8eb; }
   #search-box::placeholder { color: #4a6a7a; }
+
+  /* Explorer */
+  #explorer {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: #15203088;
+    border: 1px solid #3a5a6a22;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  #explorer-header {
+    color: #a0b8c8;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 10px 12px 6px 12px;
+  }
+  #explorer-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2px 0 8px 0;
+    font-size: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif;
+    outline: none;
+  }
+  #explorer-list:focus { box-shadow: inset 0 0 0 1px #79a8eb55; }
+  #explorer-list::-webkit-scrollbar { width: 6px; }
+  #explorer-list::-webkit-scrollbar-track { background: transparent; }
+  #explorer-list::-webkit-scrollbar-thumb { background: #3a5a6a44; border-radius: 3px; }
+  .explorer-row {
+    padding: 3px 8px 3px 8px;
+    color: #cdd3da;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    user-select: none;
+  }
+  .explorer-row.folder { color: #a0b8c8; }
+  .explorer-row:hover { background: #1e304055; }
+  .explorer-row.selected { background: #1e3040; color: #79a8eb; }
+  .explorer-empty { padding: 8px 12px; color: #4a6a7a; font-size: 11px; font-style: italic; }
 
   /* Stats */
   #stats {
@@ -348,6 +399,10 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <div id="controls">
   <select id="workspace-select"></select>
   <input id="search-box" type="text" placeholder="Search notes..." />
+  <div id="explorer">
+    <div id="explorer-header">Explorer</div>
+    <div id="explorer-list" tabindex="0"></div>
+  </div>
   <button id="reset-btn" onclick="resetView()">Reset view</button>
 </div>
 
@@ -441,10 +496,6 @@ function nodeSize(n) {
 const wsSelect = document.getElementById('workspace-select');
 const wsNames = Object.keys(WORKSPACES_DATA);
 
-if (wsNames.length <= 1) {
-  wsSelect.style.display = 'none';
-}
-
 wsNames.forEach(name => {
   const opt = document.createElement('option');
   opt.value = name;
@@ -466,6 +517,144 @@ function renderGraph(wsName) {
   document.getElementById('tooltip').style.opacity = 0;
 
   const data = WORKSPACES_DATA[wsName];
+
+  // ── Explorer (file tree) ─────────────────────────────────────────────
+  // Rendered BEFORE vis.js initialization so it still appears even if the
+  // graph canvas fails to initialize (e.g. CDN blocked, sandboxed browser).
+  const explorerList = document.getElementById('explorer-list');
+  let explorerTree = buildExplorerTree(data.nodes);
+  let explorerVisible = flattenExplorer(explorerTree);
+  let explorerIndex = -1;
+
+  function buildExplorerTree(nodes) {
+    const root = { name: '', type: 'folder', children: [], expanded: true, depth: 0 };
+    for (const n of nodes) {
+      if (!n.path || n.group === 'unresolved') continue;
+      const parts = n.id.split('/');
+      let cur = root;
+      for (let i = 0; i < parts.length - 1; i++) {
+        const name = parts[i];
+        let child = cur.children.find(c => c.type === 'folder' && c.name === name);
+        if (!child) {
+          child = { name, type: 'folder', children: [], expanded: true, depth: cur.depth + 1 };
+          cur.children.push(child);
+        }
+        cur = child;
+      }
+      cur.children.push({
+        name: parts[parts.length - 1],
+        type: 'file',
+        nodeId: n.id,
+        path: n.path,
+        depth: cur.depth + 1,
+      });
+    }
+    sortTree(root);
+    return root;
+  }
+
+  function sortTree(node) {
+    if (!node.children) return;
+    node.children.sort((a, b) => {
+      if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+    node.children.forEach(sortTree);
+  }
+
+  function flattenExplorer(root) {
+    const out = [];
+    function walk(n) {
+      if (n !== root) out.push(n);
+      if (n.type === 'folder' && n.expanded) n.children.forEach(walk);
+    }
+    walk(root);
+    return out;
+  }
+
+  function renderExplorerList() {
+    explorerList.innerHTML = '';
+    if (!explorerVisible.length) {
+      const empty = document.createElement('div');
+      empty.className = 'explorer-empty';
+      empty.textContent = 'no notes';
+      explorerList.appendChild(empty);
+      return;
+    }
+    explorerVisible.forEach((row, i) => {
+      const el = document.createElement('div');
+      el.className = 'explorer-row ' + row.type;
+      el.style.paddingLeft = (8 + (row.depth - 1) * 12) + 'px';
+      if (i === explorerIndex) el.classList.add('selected');
+      const icon = row.type === 'folder' ? (row.expanded ? '\u25be ' : '\u25b8 ') : '\u2022 ';
+      const label = row.type === 'file' ? row.name.replace(/\.md$/, '') : row.name;
+      el.textContent = icon + label;
+      el.title = label;
+      el.addEventListener('click', () => {
+        if (row.type === 'folder') {
+          row.expanded = !row.expanded;
+          explorerVisible = flattenExplorer(explorerTree);
+          renderExplorerList();
+        } else {
+          explorerSelect(i);
+          if (IS_SERVER_MODE) openInNvim(row.path);
+        }
+      });
+      explorerList.appendChild(el);
+    });
+  }
+
+  function explorerSelect(i, point) {
+    if (point === undefined) point = true;
+    if (i < 0 || i >= explorerVisible.length) return;
+    explorerIndex = i;
+    const children = explorerList.children;
+    for (let k = 0; k < children.length; k++) {
+      children[k].classList.toggle('selected', k === i);
+    }
+    const el = children[i];
+    if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' });
+    const row = explorerVisible[i];
+    if (point && row.type === 'file' && row.nodeId && typeof selectNode === 'function' && nodesDS) {
+      try { selectNode(row.nodeId); } catch (err) { /* graph not ready */ }
+    }
+  }
+
+  function explorerMove(delta) {
+    if (!explorerVisible.length) return;
+    let i = explorerIndex;
+    if (i < 0) i = delta > 0 ? 0 : explorerVisible.length - 1;
+    else i = Math.max(0, Math.min(explorerVisible.length - 1, i + delta));
+    explorerSelect(i);
+  }
+
+  function explorerToggle(expand) {
+    const row = explorerVisible[explorerIndex];
+    if (!row || row.type !== 'folder') return false;
+    if (expand === true) row.expanded = true;
+    else if (expand === false) row.expanded = false;
+    else row.expanded = !row.expanded;
+    explorerVisible = flattenExplorer(explorerTree);
+    renderExplorerList();
+    return true;
+  }
+
+  function enterExplorer() {
+    explorerList.focus();
+    if (explorerIndex < 0) {
+      const firstFile = explorerVisible.findIndex(r => r.type === 'file');
+      if (firstFile >= 0) explorerSelect(firstFile);
+      else if (explorerVisible.length) explorerSelect(0, false);
+    } else {
+      explorerSelect(explorerIndex);
+    }
+  }
+
+  function exitExplorer() {
+    explorerList.blur();
+  }
+
+  renderExplorerList();
 
   // Build color map
   GROUP_COLORS = {};
@@ -978,21 +1167,20 @@ function renderGraph(wsName) {
     if (filePath) openInNvim(filePath);
   });
 
-  if (IS_SERVER_MODE) {
-    document.getElementById('hint').textContent =
-      'f to search \u00b7 hjkl navigate \u00b7 enter to focus \u00b7 o to open \u00b7 esc to go back';
-    const keymapEl = document.getElementById('keymap-help');
-    keymapEl.innerHTML = [
-      ['h j k l', 'navigate'],
-      ['f', 'search'],
-      ['w', 'workspace (j/k pick)'],
-      ['enter', 'focus node'],
-      ['o', 'open in nvim'],
-      ['y / n', 'confirm / cancel'],
-      ['esc', 'go back'],
-    ].map(([k, d]) => '<div><span class="key">' + k + '</span><span class="desc">' + d + '</span></div>').join('');
-    keymapEl.style.display = 'block';
-  }
+  document.getElementById('hint').textContent =
+    'e explorer \u00b7 f search \u00b7 hjkl navigate \u00b7 enter focus \u00b7 o open \u00b7 esc back';
+  const keymapEl = document.getElementById('keymap-help');
+  keymapEl.innerHTML = [
+    ['h j k l', 'navigate'],
+    ['e', 'explorer'],
+    ['f', 'search'],
+    ['w', 'workspace (j/k pick)'],
+    ['enter', 'focus node'],
+    ['o', 'open in nvim'],
+    ['y / n', 'confirm / cancel'],
+    ['esc', 'go back'],
+  ].map(([k, d]) => '<div><span class="key">' + k + '</span><span class="desc">' + d + '</span></div>').join('');
+  keymapEl.style.display = 'block';
 
   // Remove previous keydown handler before adding new one
   if (window._graphKeyHandler) document.removeEventListener('keydown', window._graphKeyHandler);
@@ -1004,10 +1192,50 @@ function renderGraph(wsName) {
         wsSelect.blur();
         return;
       }
+      if (document.activeElement === explorerList) {
+        e.preventDefault();
+        exitExplorer();
+        return;
+      }
       if (focusedNode) exitFocus();
       else if (selectedNode) selectNode(null);
       else if (searchActive) restoreNormal();
       else resetView();
+      return;
+    }
+    // Explorer focused: vim-style tree nav, open file, toggle folders
+    if (document.activeElement === explorerList) {
+      if (e.key === 'j') { e.preventDefault(); explorerMove(1); return; }
+      if (e.key === 'k') { e.preventDefault(); explorerMove(-1); return; }
+      if (e.key === 'l') {
+        const row = explorerVisible[explorerIndex];
+        if (row && row.type === 'folder') { e.preventDefault(); explorerToggle(true); }
+        return;
+      }
+      if (e.key === 'h') {
+        const row = explorerVisible[explorerIndex];
+        if (row && row.type === 'folder' && row.expanded) {
+          e.preventDefault();
+          explorerToggle(false);
+        }
+        return;
+      }
+      if (e.key === 'Enter') {
+        const row = explorerVisible[explorerIndex];
+        if (!row) return;
+        e.preventDefault();
+        if (row.type === 'folder') explorerToggle();
+        else if (IS_SERVER_MODE) openInNvim(row.path);
+        return;
+      }
+      if (e.key === 'o') {
+        const row = explorerVisible[explorerIndex];
+        if (row && row.type === 'file' && IS_SERVER_MODE) {
+          e.preventDefault();
+          openInNvim(row.path);
+        }
+        return;
+      }
       return;
     }
     // Input mode: disable vim navigation, handle only input-specific keys
@@ -1025,6 +1253,11 @@ function renderGraph(wsName) {
           renderGraph(wsSelect.value);
         }
       }
+      return;
+    }
+    if (e.key === 'e') {
+      e.preventDefault();
+      enterExplorer();
       return;
     }
     if (e.key === 'f') {
@@ -1206,6 +1439,7 @@ def start_server(html_content: str, nvim_server: str, no_open: bool, chromium_ap
             if parsed.path in ('/', '/index.html'):
                 self.send_response(200)
                 self.send_header('Content-Type', 'text/html; charset=utf-8')
+                self.send_header('Cache-Control', 'no-store, must-revalidate')
                 self.end_headers()
                 self.wfile.write(html_content.encode('utf-8'))
             elif parsed.path == '/api/open':

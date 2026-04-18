@@ -29,13 +29,18 @@ works with any Obsidian-flavoured vault or plain `[[wikilink]]` notes.
 
 - Force-directed graph of notes and wikilink edges (vis.js, rendered in your
   browser)
+- Sidebar file Explorer that mirrors the vault's folder tree — `j`/`k` to
+  move, `h`/`l` to collapse/expand folders, `o`/Enter to open, and selecting
+  a file highlights the matching node in the graph
 - Vim-style keyboard navigation: `hjkl` to move, `Enter` to focus,
-  `f` to search, `w` to switch workspace, `o` to open in Neovim, `Esc` to back
+  `e` to jump to the file Explorer, `f` to search, `w` to switch workspace,
+  `o` to open in Neovim, `Esc` to back
 - Mouse support: drag to pan, scroll to zoom, hover to highlight, click to
   focus, double-click / label-click to open the note
-- Multi-vault support with an in-browser workspace selector
+- Multi-vault support with an in-browser workspace selector — switching
+  vaults rebuilds the Explorer tree automatically
 - Opens files back in your running Neovim via its RPC socket
-- Unresolved `[[links]]` shown as ghost nodes
+- Unresolved `[[links]]` shown as ghost nodes (excluded from the Explorer)
 
 ## Requirements
 
