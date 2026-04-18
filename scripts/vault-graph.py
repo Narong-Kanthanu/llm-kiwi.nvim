@@ -186,6 +186,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   body { background: #1a2332; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; overflow: hidden; display: flex; height: 100vh; }
   #network-container { width: 100%; height: 100%; }
   #graph-wrap { position: relative; flex: 1; min-width: 0; height: 100%; }
+  .vis-network:focus, .vis-network canvas:focus { outline: none; }
 
   /* Tooltip */
   #tooltip {
