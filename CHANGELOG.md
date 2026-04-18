@@ -7,14 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Graph viewer layout split into two real columns: a fixed 232px sidebar
+  on the left (workspace picker, search, Explorer tree, reset, stats)
+  and a flex-filled graph column on the right. Floating overlays
+  (Folders legend, keymap help, hint) now live inside the graph column
+  instead of overlapping the sidebar, so node labels never slide behind
+  sidebar content.
+
 ### Fixed
 
 - Exiting the sidebar Explorer (Esc) now restores the graph to a clean
   state — clears the red-bordered node highlight and hides the tooltip,
-  matching the exit symmetry of search and focus modes. Tree navigation
-  (`j`/`k`) also no longer triggers an animated graph pan on every
-  keystroke, removing the lag users saw when switching back to the graph
-  after scrolling the file tree.
+  matching the exit symmetry of search and focus modes.
+- Explorer entry (`e`) pans the graph to the picked node so it's always
+  on-screen, and tree navigation (`j`/`k`) pans smoothly using the same
+  400ms easeInOutCubic animation as normal-mode `hjkl`. vis.js cancels
+  the prior animation on each call, so rapid keystrokes retarget
+  instead of queueing — no lag, no teleporting highlight.
 
 ## [0.4.0] - 2026-04-18
 

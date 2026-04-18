@@ -183,8 +183,9 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <title>LLM Kiwi — Knowledge Graph</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #1a2332; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; overflow: hidden; }
-  #network-container { width: 100vw; height: 100vh; }
+  body { background: #1a2332; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; overflow: hidden; display: flex; height: 100vh; }
+  #network-container { width: 100%; height: 100%; }
+  #graph-wrap { position: relative; flex: 1; min-width: 0; height: 100%; }
 
   /* Tooltip */
   #tooltip {
@@ -206,15 +207,14 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 
   /* Controls */
   #controls {
-    position: absolute;
-    top: 16px;
-    left: 16px;
-    bottom: 64px;
-    width: 200px;
+    position: relative;
+    flex: 0 0 232px;
+    padding: 16px;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    z-index: 5;
+    border-right: 1px solid #3a5a6a22;
+    min-height: 0;
   }
   #controls > select, #controls > input, #controls > button, #controls > #explorer {
     box-sizing: border-box;
@@ -228,7 +228,6 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     color: #cdd3da;
     font-size: 13px;
     outline: none;
-    width: 200px;
   }
   #workspace-select { cursor: pointer; }
   #workspace-select:focus, #search-box:focus { border-color: #79a8eb; }
@@ -281,14 +280,11 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 
   /* Stats */
   #stats {
-    position: absolute;
-    bottom: 16px;
-    left: 16px;
+    margin-top: auto;
     color: #4a6a7a;
     font-size: 11px;
     font-family: monospace;
     line-height: 1.8;
-    z-index: 5;
   }
 
   /* Confirm modal */
@@ -385,16 +381,12 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     font-size: 12px;
     cursor: pointer;
     transition: background .15s;
-    width: 200px;
   }
   #reset-btn:hover { background: #1e3040; }
 
 </style>
 </head>
 <body>
-
-<div id="network-container"></div>
-<div id="tooltip"><div class="title"></div><div class="meta"></div></div>
 
 <div id="controls">
   <select id="workspace-select"></select>
@@ -404,15 +396,20 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     <div id="explorer-list" tabindex="0"></div>
   </div>
   <button id="reset-btn" onclick="resetView()">Reset view</button>
+  <div id="stats"></div>
 </div>
 
-<div id="legend">
-  <div class="legend-title">Folders</div>
-  <div id="legend-items"></div>
+<div id="graph-wrap">
+  <div id="network-container"></div>
+  <div id="legend">
+    <div class="legend-title">Folders</div>
+    <div id="legend-items"></div>
+  </div>
+  <div id="keymap-help"></div>
+  <div id="hint">drag · scroll to zoom · hover to highlight · click to focus</div>
 </div>
 
-<div id="stats"></div>
-<div id="keymap-help"></div>
+<div id="tooltip"><div class="title"></div><div class="meta"></div></div>
 <div id="confirm-overlay">
   <div id="confirm-box">
     <div class="msg"></div>
@@ -423,7 +420,6 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     </div>
   </div>
 </div>
-<div id="hint">drag · scroll to zoom · hover to highlight · click to focus</div>
 
 <script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
 <script>
@@ -596,7 +592,7 @@ function renderGraph(wsName) {
           explorerVisible = flattenExplorer(explorerTree);
           renderExplorerList();
         } else {
-          explorerSelect(i);
+          explorerSelect(i, true, true);
           if (IS_SERVER_MODE) openInNvim(row.path);
         }
       });
@@ -604,8 +600,9 @@ function renderGraph(wsName) {
     });
   }
 
-  function explorerSelect(i, point) {
+  function explorerSelect(i, point, pan) {
     if (point === undefined) point = true;
+    if (pan === undefined) pan = false;
     if (i < 0 || i >= explorerVisible.length) return;
     explorerIndex = i;
     const children = explorerList.children;
@@ -616,7 +613,7 @@ function renderGraph(wsName) {
     if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' });
     const row = explorerVisible[i];
     if (point && row.type === 'file' && row.nodeId && typeof selectNode === 'function' && nodesDS) {
-      try { selectNode(row.nodeId, { pan: false }); } catch (err) { /* graph not ready */ }
+      try { selectNode(row.nodeId, { pan }); } catch (err) { /* graph not ready */ }
     }
   }
 
@@ -625,7 +622,7 @@ function renderGraph(wsName) {
     let i = explorerIndex;
     if (i < 0) i = delta > 0 ? 0 : explorerVisible.length - 1;
     else i = Math.max(0, Math.min(explorerVisible.length - 1, i + delta));
-    explorerSelect(i);
+    explorerSelect(i, true, true);
   }
 
   function explorerToggle(expand) {
@@ -641,12 +638,13 @@ function renderGraph(wsName) {
 
   function enterExplorer() {
     explorerList.focus();
+    // Pan on entry so the picked node is guaranteed on-screen; j/k keep pan=false to avoid queued animations.
     if (explorerIndex < 0) {
       const firstFile = explorerVisible.findIndex(r => r.type === 'file');
-      if (firstFile >= 0) explorerSelect(firstFile);
+      if (firstFile >= 0) explorerSelect(firstFile, true, true);
       else if (explorerVisible.length) explorerSelect(0, false);
     } else {
-      explorerSelect(explorerIndex);
+      explorerSelect(explorerIndex, true, true);
     }
   }
 
@@ -991,7 +989,7 @@ function renderGraph(wsName) {
     tip.style.top = (legendRect.bottom + 8) + 'px';
     tip.style.opacity = 1;
 
-    // Smooth pan (skipped when called from the file-tree sidebar — avoids queued animations on every j/k).
+    // Smooth pan. vis.js cancels the prior animation on each call, so rapid presses from hjkl or explorer j/k retarget instead of queuing.
     if (pan) {
       const pos = network.getPositions([nodeId])[nodeId];
       network.moveTo({ position: pos, scale: network.getScale(), animation: { duration: 400, easingFunction: 'easeInOutCubic' } });
