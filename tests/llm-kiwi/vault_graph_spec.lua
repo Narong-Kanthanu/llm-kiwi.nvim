@@ -48,13 +48,14 @@ local html = (build_exit == 0) and read_file(out) or ""
 
 -- Clean up the fixture vault and generated HTML when the test session exits.
 vim.api.nvim_create_autocmd("VimLeavePre", {
-  callback = function() vim.fn.delete(tmp, "rf") end,
+  callback = function()
+    vim.fn.delete(tmp, "rf")
+  end,
 })
 
 describe("vault-graph.py generated HTML", function()
   it("builds successfully against the fixture vault", function()
-    assert.equals(0, build_exit,
-      "vault-graph.py failed to build:\n" .. tostring(build_output))
+    assert.equals(0, build_exit, "vault-graph.py failed to build:\n" .. tostring(build_output))
     assert.is_true(#html > 1000, "generated HTML is suspiciously small")
   end)
 
@@ -93,8 +94,10 @@ describe("vault-graph.py generated HTML", function()
     local vis_pos = html:find("new vis.Network(", 1, true)
     assert.is_truthy(explorer_pos, "Explorer build call missing")
     assert.is_truthy(vis_pos, "vis.Network init missing")
-    assert.is_true(explorer_pos < vis_pos,
-      "Explorer must be built before vis.Network so graph init failures don't blank the sidebar")
+    assert.is_true(
+      explorer_pos < vis_pos,
+      "Explorer must be built before vis.Network so graph init failures don't blank the sidebar"
+    )
   end)
 
   it("places Reset view button AFTER the Explorer in the controls panel", function()
@@ -102,14 +105,18 @@ describe("vault-graph.py generated HTML", function()
     local reset_btn = html:find('id="reset-btn"', 1, true)
     assert.is_truthy(explorer_div, "#explorer div missing")
     assert.is_truthy(reset_btn, "#reset-btn missing")
-    assert.is_true(reset_btn > explorer_div,
-      "Reset view button must be positioned after the Explorer (user-requested layout)")
+    assert.is_true(
+      reset_btn > explorer_div,
+      "Reset view button must be positioned after the Explorer (user-requested layout)"
+    )
   end)
 
   it("keeps the workspace selector always visible (no single-vault auto-hide)", function()
     -- The old hide-when-single rule was removed; ensure it doesn't sneak back.
-    assert.is_nil(html:find("wsNames.length <= 1", 1, true),
-      "workspace selector should no longer auto-hide for single-vault setups")
+    assert.is_nil(
+      html:find("wsNames.length <= 1", 1, true),
+      "workspace selector should no longer auto-hide for single-vault setups"
+    )
   end)
 
   it("unconditionally populates the keymap help (not gated on server mode)", function()
@@ -129,9 +136,10 @@ describe("vault-graph.py generated HTML", function()
   it("emits the Cache-Control header in server mode to avoid stale HTML", function()
     -- This lives in the Python source, not the HTML output; read the script directly.
     local py = read_file(script)
-    assert.is_truthy(py:find("Cache-Control", 1, true),
-      "server must send Cache-Control so browsers don't serve pre-Explorer HTML from cache")
-    assert.is_truthy(py:find("no-store", 1, true),
-      "Cache-Control should include no-store")
+    assert.is_truthy(
+      py:find("Cache-Control", 1, true),
+      "server must send Cache-Control so browsers don't serve pre-Explorer HTML from cache"
+    )
+    assert.is_truthy(py:find("no-store", 1, true), "Cache-Control should include no-store")
   end)
 end)
