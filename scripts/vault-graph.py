@@ -613,7 +613,7 @@ function renderGraph(wsName) {
     if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' });
     const row = explorerVisible[i];
     if (point && row.type === 'file' && row.nodeId && typeof selectNode === 'function' && nodesDS) {
-      try { selectNode(row.nodeId, { pan }); } catch (err) { /* graph not ready */ }
+      try { selectNode(row.nodeId, { pan, syncExplorer: false }); } catch (err) { /* graph not ready */ }
     }
   }
 
@@ -623,6 +623,44 @@ function renderGraph(wsName) {
     if (i < 0) i = delta > 0 ? 0 : explorerVisible.length - 1;
     else i = Math.max(0, Math.min(explorerVisible.length - 1, i + delta));
     explorerSelect(i, true, true);
+  }
+
+  // Sync the explorer highlight to a graph node. Expands collapsed ancestor folders so the row is actually visible.
+  function syncExplorerToNode(nodeId) {
+    if (!nodeId) {
+      explorerIndex = -1;
+      for (const c of explorerList.children) c.classList.remove('selected');
+      return;
+    }
+    const ancestors = [];
+    function find(n, isRoot) {
+      if (n.type === 'file' && n.nodeId === nodeId) return true;
+      if (n.type === 'folder') {
+        for (const child of n.children) {
+          if (find(child, false)) {
+            if (!isRoot) ancestors.unshift(n);
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+    if (!find(explorerTree, true)) return;
+    let changed = false;
+    ancestors.forEach(a => { if (!a.expanded) { a.expanded = true; changed = true; } });
+    if (changed) {
+      explorerVisible = flattenExplorer(explorerTree);
+      renderExplorerList();
+    }
+    const idx = explorerVisible.findIndex(r => r.type === 'file' && r.nodeId === nodeId);
+    if (idx < 0) return;
+    explorerIndex = idx;
+    const children = explorerList.children;
+    for (let k = 0; k < children.length; k++) {
+      children[k].classList.toggle('selected', k === idx);
+    }
+    const el = children[idx];
+    if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' });
   }
 
   function explorerToggle(expand) {
@@ -951,6 +989,7 @@ function renderGraph(wsName) {
 
   function selectNode(nodeId, opts) {
     const pan = !opts || opts.pan !== false;
+    const sync = !opts || opts.syncExplorer !== false;
     // Restore previous node
     if (selectedNode) {
       const origSize = origSizes.get(selectedNode);
@@ -963,7 +1002,11 @@ function renderGraph(wsName) {
       });
     }
     selectedNode = nodeId;
-    if (!nodeId) { tip.style.opacity = 0; return; }
+    if (!nodeId) {
+      tip.style.opacity = 0;
+      if (sync) syncExplorerToNode(null);
+      return;
+    }
 
     const nd = nodesDS.get(nodeId);
     if (!origSizes.has(nodeId)) origSizes.set(nodeId, nd.size);
@@ -994,6 +1037,8 @@ function renderGraph(wsName) {
       const pos = network.getPositions([nodeId])[nodeId];
       network.moveTo({ position: pos, scale: network.getScale(), animation: { duration: 400, easingFunction: 'easeInOutCubic' } });
     }
+
+    if (sync) syncExplorerToNode(nodeId);
   }
 
   function navigateVim(direction) {
