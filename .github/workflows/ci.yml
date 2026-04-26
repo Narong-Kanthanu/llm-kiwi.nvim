@@ -101,3 +101,30 @@ jobs:
           python scripts/vault-graph.py --vault test="$RUNNER_TEMP/vault" --no-open --output "$RUNNER_TEMP/graph.html"
           grep -q 'LLM Kiwi' "$RUNNER_TEMP/graph.html"
           grep -q '"test"' "$RUNNER_TEMP/graph.html"
+
+  # Single aggregator check to require in branch protection.
+  # Lets us add/remove CI jobs without touching the ruleset.
+  required:
+    name: required
+    needs: [lua, python, lua-tests, smoke]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify all required jobs succeeded
+        run: |
+          results=(
+            "lua=${{ needs.lua.result }}"
+            "python=${{ needs.python.result }}"
+            "lua-tests=${{ needs.lua-tests.result }}"
+            "smoke=${{ needs.smoke.result }}"
+          )
+          failed=0
+          for entry in "${results[@]}"; do
+            name="${entry%%=*}"
+            result="${entry#*=}"
+            echo "$name: $result"
+            if [[ "$result" != "success" ]]; then
+              failed=1
+            fi
+          done
+          exit "$failed"
