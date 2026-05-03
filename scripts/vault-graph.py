@@ -255,6 +255,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   #explorer-list {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 2px 0 8px 0;
     font-size: 12px;
     font-family: -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif;
