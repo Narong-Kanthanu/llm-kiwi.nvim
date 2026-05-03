@@ -83,11 +83,10 @@ Tests live under `tests/` and follow the `*_spec.lua` convention.
 
 ## Cutting a release
 
-Releases are driven by [`CHANGELOG.md`](./CHANGELOG.md). To cut
-`vX.Y.Z`:
+Releases are CHANGELOG-driven. To cut `vX.Y.Z`:
 
 1. Move the `## [Unreleased]` entries into a new dated section at the
-   top of the release list:
+   top of [`CHANGELOG.md`](./CHANGELOG.md):
 
    ```markdown
    ## [X.Y.Z] - YYYY-MM-DD
@@ -97,32 +96,28 @@ Releases are driven by [`CHANGELOG.md`](./CHANGELOG.md). To cut
    ```
 
    Update the link anchors at the bottom of the file as well.
-2. Open a PR with just that change and merge it to `main`.
+2. Open a PR with that change and merge it to `main`.
 
-On merge, [`auto-release.yml`](./.github/workflows/auto-release.yml)
-takes over. It:
+That's it — [`release.yml`](./.github/workflows/release.yml) fires on
+the merged PR (filtered to `paths: CHANGELOG.md`) and:
 
-- parses the topmost dated version from `CHANGELOG.md`,
-- runs the full lint/compile/plenary gate,
-- creates the annotated tag `vX.Y.Z`,
-- publishes a GitHub release using the CHANGELOG body as release notes.
+- parses the topmost dated `## [X.Y.Z] - YYYY-MM-DD` heading,
+- skips if the tag and the GitHub release both already exist
+  (idempotent — partial failures can be re-run safely),
+- runs the lint/compile gate (stylua, luacheck, ruff, py_compile),
+- creates the annotated tag `vX.Y.Z` and publishes the GitHub release
+  using the matching CHANGELOG block as the release body.
 
 Pre-releases work automatically — use a suffix like `0.2.0-rc.1` in the
-heading and the workflow marks the GitHub release as a pre-release.
+heading (`## [0.2.0-rc.1] - YYYY-MM-DD`) and the workflow marks the
+GitHub release as a pre-release.
 
 ### Manual fallback
 
-If you need to re-tag or cut a release without touching the CHANGELOG
-(emergency fix, repeat release), push a tag directly:
-
-```sh
-git tag -a vX.Y.Z -m "Release vX.Y.Z"
-git push origin vX.Y.Z
-```
-
-That path goes through [`release.yml`](./.github/workflows/release.yml)
-which runs the same lint/compile checks and publishes a release with
-GitHub's auto-generated notes.
+The workflow also accepts `workflow_dispatch`. Trigger it from the
+Actions tab if a release run fails partway (e.g. tag pushed but release
+publish failed) — the idempotent state checks ensure only the missing
+side gets re-created.
 
 ## Scope & style
 

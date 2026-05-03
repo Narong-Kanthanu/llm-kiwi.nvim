@@ -1,12 +1,25 @@
 name: Release
 
+# Auto-release: fires when a PR that touches CHANGELOG.md is merged into main.
+# workflow_dispatch is a manual fallback for re-runs (e.g. release publish
+# fails after the tag was already pushed — re-running is safe and idempotent).
+
 on:
-  push:
-    tags:
-      - "v*.*.*"
+  pull_request:
+    types: [closed]
+    branches: [main]
+    paths:
+      - CHANGELOG.md
+  workflow_dispatch:
 
 permissions:
   contents: write
+
+# Single group so a manual workflow_dispatch can't race a concurrent
+# pull_request run.
+concurrency:
+  group: release-main
+  cancel-in-progress: false
 
 env:
   STYLUA_VERSION: v2.4.1
@@ -14,11 +27,123 @@ env:
   RUFF_VERSION: "0.6.9"
 
 jobs:
+  detect-version:
+    name: Detect version from CHANGELOG
+    # Skip closed-without-merge; workflow_dispatch always runs.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.state.outputs.should_release }}
+      tag_exists: ${{ steps.state.outputs.tag_exists }}
+      release_exists: ${{ steps.state.outputs.release_exists }}
+      version: ${{ steps.parse.outputs.version }}
+      tag: ${{ steps.parse.outputs.tag }}
+      notes: ${{ steps.parse.outputs.notes }}
+      is_prerelease: ${{ steps.parse.outputs.is_prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Parse topmost dated version from CHANGELOG
+        id: parse
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Topmost dated version heading: "## [X.Y.Z] - YYYY-MM-DD"
+          # or "## [X.Y.Z-pre.1] - YYYY-MM-DD" (pre-release suffix allowed).
+          HEADING=$(grep -oE '^## \[[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?\] - [0-9]{4}-[0-9]{2}-[0-9]{2}' CHANGELOG.md | head -1 || true)
+
+          if [ -z "$HEADING" ]; then
+            echo "::error file=CHANGELOG.md::no dated semver heading found"
+            exit 1
+          fi
+
+          VERSION=$(echo "$HEADING" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?' | head -1)
+          TAG="v$VERSION"
+
+          # Extract notes body: between the version heading and the next
+          # "## [" heading or the first link-reference definition.
+          NOTES=$(awk -v v="$VERSION" '
+            $0 ~ "^## \\[" v "\\]" { capture=1; next }
+            capture && (/^## \[/ || /^\[[^]]+\]: /) { exit }
+            capture { buf = buf $0 "\n" }
+            END {
+              sub(/^\n+/, "", buf)
+              sub(/\n+$/, "", buf)
+              printf "%s", buf
+            }
+          ' CHANGELOG.md)
+
+          if [ -z "$NOTES" ]; then
+            NOTES="Release $TAG"
+          fi
+
+          IS_PRERELEASE=false
+          case "$VERSION" in
+            *-*) IS_PRERELEASE=true ;;
+          esac
+
+          echo "Detected version: $VERSION (prerelease=$IS_PRERELEASE)"
+
+          {
+            echo "version=$VERSION"
+            echo "tag=$TAG"
+            echo "is_prerelease=$IS_PRERELEASE"
+            echo "notes<<__END_OF_NOTES__"
+            echo "$NOTES"
+            echo "__END_OF_NOTES__"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Check tag and release state
+        id: state
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.parse.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null \
+            || git ls-remote --exit-code --tags origin "$TAG" >/dev/null 2>&1; then
+            TAG_EXISTS=true
+          else
+            TAG_EXISTS=false
+          fi
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            RELEASE_EXISTS=true
+          else
+            RELEASE_EXISTS=false
+          fi
+
+          if [ "$TAG_EXISTS" = "true" ] && [ "$RELEASE_EXISTS" = "true" ]; then
+            SHOULD_RELEASE=false
+            echo "Tag $TAG and release already exist — nothing to do."
+          else
+            SHOULD_RELEASE=true
+            echo "Tag $TAG: tag_exists=$TAG_EXISTS release_exists=$RELEASE_EXISTS"
+          fi
+
+          {
+            echo "tag_exists=$TAG_EXISTS"
+            echo "release_exists=$RELEASE_EXISTS"
+            echo "should_release=$SHOULD_RELEASE"
+          } >> "$GITHUB_OUTPUT"
+
   checks:
     name: Pre-release checks
+    needs: detect-version
+    if: needs.detect-version.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Stylua check
         uses: JohnnyMorganz/stylua-action@v4
@@ -49,17 +174,36 @@ jobs:
         run: python -W error::SyntaxWarning -m py_compile scripts/vault-graph.py
 
   release:
-    name: Publish GitHub release
-    needs: checks
+    name: Tag and publish release
+    needs: [detect-version, checks]
+    if: needs.detect-version.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish release
+      - name: Configure git identity
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create and push annotated tag
+        if: needs.detect-version.outputs.tag_exists == 'false'
+        env:
+          TAG: ${{ needs.detect-version.outputs.tag }}
+        run: |
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+
+      - name: Publish GitHub release
+        if: needs.detect-version.outputs.release_exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
+          tag_name: ${{ needs.detect-version.outputs.tag }}
+          name: ${{ needs.detect-version.outputs.tag }}
+          body: ${{ needs.detect-version.outputs.notes }}
           draft: false
-          prerelease: ${{ contains(github.ref_name, '-') }}
+          prerelease: ${{ needs.detect-version.outputs.is_prerelease == 'true' }}
