@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-05-04
+
+### Changed
+
+- Graph sidebar width is now viewport-relative (`25vw`) instead of a
+  fixed 232px, so the controls panel scales with screen size. The panel
+  also gets `min-width: 0` (overriding flex's `min-content` default) and
+  `overflow: hidden`, so a long unbreakable Explorer row can no longer
+  push the sidebar past its basis or bleed into the graph column.
+
+### Fixed
+
+- Explorer rows with long note titles now ellipsize inside the sidebar
+  instead of expanding the row past the panel edge. The list previously
+  defaulted to `overflow: auto` on both axes, which suppressed the
+  intended `text-overflow: ellipsis`; pinning `overflow-x: hidden`
+  restores horizontal clipping.
+
 ## [0.5.0] - 2026-04-18
 
 ### Added
@@ -122,7 +140,8 @@ Initial public release.
 - Pinned lint tool versions (stylua, luacheck, ruff) for reproducible CI.
 - Tag-triggered GitHub release workflow.
 
-[Unreleased]: https://github.com/Narong-Kanthanu/llm-kiwi.nvim/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/Narong-Kanthanu/llm-kiwi.nvim/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/Narong-Kanthanu/llm-kiwi.nvim/releases/tag/v0.5.1
 [0.5.0]: https://github.com/Narong-Kanthanu/llm-kiwi.nvim/releases/tag/v0.5.0
 [0.4.0]: https://github.com/Narong-Kanthanu/llm-kiwi.nvim/releases/tag/v0.4.0
 [0.3.0]: https://github.com/Narong-Kanthanu/llm-kiwi.nvim/releases/tag/v0.3.0
