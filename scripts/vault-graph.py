@@ -209,7 +209,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   /* Controls */
   #controls {
     position: relative;
-    flex: 0 0 25vw;
+    flex: 0 0 22vw;
     min-width: 0;
     padding: 16px;
     display: flex;
