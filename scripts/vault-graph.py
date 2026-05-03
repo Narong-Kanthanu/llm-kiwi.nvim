@@ -209,12 +209,14 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   /* Controls */
   #controls {
     position: relative;
-    flex: 0 0 232px;
+    flex: 0 0 25vw;
+    min-width: 0;
     padding: 16px;
     display: flex;
     flex-direction: column;
     gap: 8px;
     min-height: 0;
+    overflow: hidden;
   }
   #controls > select, #controls > input, #controls > button, #controls > #explorer {
     box-sizing: border-box;
