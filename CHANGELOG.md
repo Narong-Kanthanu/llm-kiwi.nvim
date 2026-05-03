@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Esc out of an Explorer-initiated focus mode now returns to the
+  Explorer at the same selected row (just zoomed back out), instead of
+  fitting the whole graph and dropping the selection. Pressing Enter on
+  a file row to zoom in and then Esc to zoom back out now preserves the
+  navigation anchor, so `j/k`/`Enter` continues from where you left off.
+
 ## [0.5.2] - 2026-05-04
 
 ### Changed

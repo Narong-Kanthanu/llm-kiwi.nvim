@@ -442,6 +442,7 @@ let nodesDS = null;
 let edgesDS = null;
 let GROUP_COLORS = {};
 let focusedNode = null;
+let focusedFromExplorer = false;
 let searchActive = false;
 let savedSearchQuery = '';
 let clickTimer = null;
@@ -936,8 +937,9 @@ function renderGraph(wsName) {
   });
 
   // ── Focus mode (click node to zoom, click background to exit) ────────
-  function enterFocus(nodeId) {
+  function enterFocus(nodeId, fromExplorer) {
     focusedNode = nodeId;
+    focusedFromExplorer = !!fromExplorer;
     const nd = nodesDS.get(nodeId);
     if (!nd || nd._group === 'unresolved') return;
 
@@ -974,6 +976,27 @@ function renderGraph(wsName) {
   function exitFocus() {
     if (!focusedNode) return;
     focusedNode = null;
+    const fromExplorer = focusedFromExplorer;
+    focusedFromExplorer = false;
+
+    // Esc out of an Explorer-initiated focus should return to the same Explorer
+    // navigation context: same selected node, same Explorer row, just zoomed
+    // back out. Don't clear selectedNode or wipe search state.
+    if (fromExplorer) {
+      // Undo enterFocus's hidden/opacity/font/edge mutations. The selected
+      // node's borderWidth/size/shadow are not touched by defaultNodeStyle,
+      // so its red highlight survives this bulk update.
+      nodesDS.update(nodesDS.get().map(n => ({
+        ...defaultNodeStyle(n),
+        hidden: false,
+        font: { color: '#cdd3da', size: n._total > 4 ? 11 : 9, strokeWidth: 2, strokeColor: '#1a2332', vadjust: -(nodeSize(n) + 4) },
+      })));
+      edgesDS.update(edgesDS.get().map(e => ({ ...defaultEdgeStyle(e), hidden: false })));
+      network.fit({ animation: { duration: 500, easingFunction: 'easeInOutQuad' } });
+      explorerList.focus();
+      return;
+    }
+
     selectNode(null);
 
     // If search was active before focus, return to search results
@@ -1280,8 +1303,10 @@ function renderGraph(wsName) {
         else if (row.nodeId) {
           // Match the global "enter focus · o open" convention: zoom into the
           // node's neighborhood; blur so Escape exits focus, not the explorer.
+          // The fromExplorer flag tells exitFocus to restore Explorer focus
+          // and keep the selected node, instead of doing a full restoreNormal.
           explorerList.blur();
-          enterFocus(row.nodeId);
+          enterFocus(row.nodeId, true);
         }
         return;
       }

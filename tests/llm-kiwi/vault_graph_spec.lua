@@ -136,11 +136,29 @@ describe("vault-graph.py generated HTML", function()
   it("wires Explorer Enter to zoom (enterFocus), not open-in-nvim", function()
     -- Regression guard: Enter on a file row in the Explorer must zoom into the
     -- node's neighborhood, matching the global 'enter focus · o open' hint.
-    -- Opening in nvim is the 'o' key's job.
+    -- Opening in nvim is the 'o' key's job. The second arg flags the focus as
+    -- explorer-originated so Esc returns to the Explorer instead of fitting all.
     assert.is_truthy(
-      html:find("enterFocus(row.nodeId)", 1, true),
-      "Explorer Enter handler must call enterFocus(row.nodeId) to zoom"
+      html:find("enterFocus(row.nodeId, true)", 1, true),
+      "Explorer Enter handler must call enterFocus(row.nodeId, true) to zoom"
     )
+  end)
+
+  it("Esc out of Explorer-initiated focus returns to Explorer navigation", function()
+    -- Regression guard for the symmetry: Enter in Explorer → focus, Esc →
+    -- Explorer (same selected node, list re-focused, just zoomed out).
+    -- Without this, Esc would fall through to restoreNormal and drop the
+    -- selection + Explorer focus.
+    assert.is_truthy(html:find("focusedFromExplorer", 1, true), "focusedFromExplorer flag missing")
+    assert.is_truthy(
+      html:find("function enterFocus(nodeId, fromExplorer)", 1, true),
+      "enterFocus must accept the fromExplorer flag"
+    )
+    -- exitFocus must re-focus the Explorer list when the focus came from it.
+    local from_branch = html:find("if %(fromExplorer%) {")
+    assert.is_truthy(from_branch, "exitFocus needs an 'if (fromExplorer)' branch")
+    local refocus = html:find("explorerList.focus();", from_branch, true)
+    assert.is_truthy(refocus, "exitFocus must call explorerList.focus() inside the fromExplorer branch")
   end)
 
   it("emits the Cache-Control header in server mode to avoid stale HTML", function()
