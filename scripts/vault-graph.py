@@ -1277,7 +1277,12 @@ function renderGraph(wsName) {
         if (!row) return;
         e.preventDefault();
         if (row.type === 'folder') explorerToggle();
-        else if (IS_SERVER_MODE) openInNvim(row.path);
+        else if (row.nodeId) {
+          // Match the global "enter focus · o open" convention: zoom into the
+          // node's neighborhood; blur so Escape exits focus, not the explorer.
+          explorerList.blur();
+          enterFocus(row.nodeId);
+        }
         return;
       }
       if (e.key === 'o') {

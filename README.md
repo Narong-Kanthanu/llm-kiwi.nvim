@@ -31,10 +31,11 @@ works with any Obsidian-flavoured vault or plain `[[wikilink]]` notes.
   browser)
 - Sidebar file Explorer that mirrors the vault's folder tree, synced
   bidirectionally with the graph — `j`/`k` to move, `h`/`l` to
-  collapse/expand folders, `o`/Enter to open. Picking a file highlights
-  its node in the graph; conversely, `hjkl`-navigating the graph moves
-  the Explorer cursor to the matching file row and auto-expands any
-  collapsed ancestor folders along the way
+  collapse/expand folders, `Enter` to zoom into the node's neighborhood,
+  `o` to open in Neovim. Picking a file highlights its node in the graph;
+  conversely, `hjkl`-navigating the graph moves the Explorer cursor to
+  the matching file row and auto-expands any collapsed ancestor folders
+  along the way
 - Vim-style keyboard navigation: `hjkl` to move, `Enter` to focus,
   `e` to jump to the file Explorer, `f` to search, `w` to switch workspace,
   `o` to open in Neovim, `Esc` to back
