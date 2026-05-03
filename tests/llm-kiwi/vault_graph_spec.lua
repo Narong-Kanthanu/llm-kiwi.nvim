@@ -133,6 +133,16 @@ describe("vault-graph.py generated HTML", function()
     assert.is_truthy(html:find("projects/alpha/deep.md", 1, true), "deeply nested note missing from payload")
   end)
 
+  it("wires Explorer Enter to zoom (enterFocus), not open-in-nvim", function()
+    -- Regression guard: Enter on a file row in the Explorer must zoom into the
+    -- node's neighborhood, matching the global 'enter focus · o open' hint.
+    -- Opening in nvim is the 'o' key's job.
+    assert.is_truthy(
+      html:find("enterFocus(row.nodeId)", 1, true),
+      "Explorer Enter handler must call enterFocus(row.nodeId) to zoom"
+    )
+  end)
+
   it("emits the Cache-Control header in server mode to avoid stale HTML", function()
     -- This lives in the Python source, not the HTML output; read the script directly.
     local py = read_file(script)

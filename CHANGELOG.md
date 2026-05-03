@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Explorer `Enter` now zooms into the selected node's neighborhood
+  (focus mode) instead of opening the file in Neovim, matching the
+  global `enter focus · o open` convention. Use `o` to open the file in
+  Neovim. The Explorer is blurred on zoom so a subsequent `Esc` exits
+  focus mode rather than the Explorer.
+
 ## [0.5.1] - 2026-05-04
 
 ### Changed
