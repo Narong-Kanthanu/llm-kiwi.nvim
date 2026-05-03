@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-05-04
+
 ### Changed
 
 - Explorer `Enter` now zooms into the selected node's neighborhood
@@ -14,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   global `enter focus · o open` convention. Use `o` to open the file in
   Neovim. The Explorer is blurred on zoom so a subsequent `Esc` exits
   focus mode rather than the Explorer.
+- Narrowed the controls sidebar from `25vw` to `22vw` so the graph
+  column gets a bit more horizontal space while keeping the Explorer
+  comfortably readable.
 
 ## [0.5.1] - 2026-05-04
 
