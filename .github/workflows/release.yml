@@ -43,7 +43,7 @@ jobs:
       notes: ${{ steps.parse.outputs.notes }}
       is_prerelease: ${{ steps.parse.outputs.is_prerelease }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 0
@@ -141,7 +141,7 @@ jobs:
     if: needs.detect-version.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: main
 
@@ -179,7 +179,7 @@ jobs:
     if: needs.detect-version.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 0
